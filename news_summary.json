@@ -1,0 +1,132 @@
+{
+  "generated_at": "2026-08-05T09:52:18.464550+00:00",
+  "calendar_events_today": [
+    {
+      "time": "2026-08-05T08:15:00-04:00",
+      "currency": "USD",
+      "title": "ADP Non-Farm Employment Change",
+      "impact": "Medium",
+      "forecast": "68K",
+      "previous": "98K",
+      "actual": null
+    },
+    {
+      "time": "2026-08-05T10:00:00-04:00",
+      "currency": "USD",
+      "title": "ISM Services PMI",
+      "impact": "Medium",
+      "forecast": "54.5",
+      "previous": "54.0",
+      "actual": null
+    },
+    {
+      "time": "2026-08-05T16:30:00-04:00",
+      "currency": "USD",
+      "title": "President Trump Speaks",
+      "impact": "Medium",
+      "forecast": "",
+      "previous": "",
+      "actual": null
+    }
+  ],
+  "calendar_error": null,
+  "news_headlines": [
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Dollar holds near six-week low as Middle East diplomacy limits FX moves",
+      "published": "2026-08-05 09:34:12",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-gains-as-dollar-hovers-near-6wk-low-rupee-higher-after-rbi-rate-hold-4836384"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Sterling today: Pound holds above $1.34 as dollar stays firm on Fed hike risk",
+      "published": "2026-08-05 08:27:50",
+      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-holds-above-134-as-dollar-stays-firm-on-fed-hike-risk-4836614"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "German yields drop to 3-week lows as easing oil cools inflation bets",
+      "published": "2026-08-05 07:48:05",
+      "link": "https://www.investing.com/news/forex-news/german-yields-drop-to-3week-lows-as-easing-oil-cools-inflation-bets-4836423"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Dollar little changed, yen weakens but remains well above pre-intervention low",
+      "published": "2026-08-04 19:45:03",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-mixed-with-usiran-talks-in-focus-yen-dips-after-interventionled-rally-4832755"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Canadian dollar weakens as oil prices fall on trade data",
+      "published": "2026-08-04 17:48:27",
+      "link": "https://www.investing.com/news/forex-news/canadian-dollar-weakens-as-oil-prices-fall-on-trade-data-93CH-4835463"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Yen slips but holds most gains after US-Japan intervention",
+      "published": "2026-08-04 17:12:22",
+      "link": "https://www.investing.com/news/forex-news/yen-slips-but-holds-most-gains-after-usjapan-intervention-93CH-4835376"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Yen slips but holds most gains after US-Japan intervention",
+      "published": "2026-08-04 16:39:00",
+      "link": "https://www.investing.com/news/forex-news/yen-slips-but-holds-most-gains-after-usjapan-intervention-93CH-4835268"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "South African rand strengthens as oil prices decline",
+      "published": "2026-08-04 15:47:50",
+      "link": "https://www.investing.com/news/forex-news/south-african-rand-strengthens-as-oil-prices-decline-93CH-4835129"
+    },
+    {
+      "source": "FXStreet - News",
+      "title": "Japanese Yen: Gains seen while below 160.00 against US Dollar – UOB",
+      "published": "Wed, 05 Aug 2026 09:43:07 GMT",
+      "link": "https://www.fxstreet.com/news/japanese-yen-gains-seen-while-below-16000-against-us-dollar-uob-202608050943"
+    },
+    {
+      "source": "FXStreet - News",
+      "title": "Gold Price Forecast: XAU/USD hits fresh weekly highs beyond the top of a triangle pattern",
+      "published": "Wed, 05 Aug 2026 09:40:22 GMT",
+      "link": "https://www.fxstreet.com/news/gold-price-forecast-xau-usd-hits-fresh-weekly-highs-beyond-the-top-of-a-triangle-pattern-202608050940"
+    },
+    {
+      "source": "FXStreet - News",
+      "title": "Hungarian Forint: MPC minutes key for support against  Euro – Commerzbank",
+      "published": "Wed, 05 Aug 2026 09:30:38 GMT",
+      "link": "https://www.fxstreet.com/news/hungarian-forint-mpc-minutes-key-for-support-against-euro-commerzbank-202608050930"
+    },
+    {
+      "source": "FXStreet - News",
+      "title": "Silver price today: Silver rises, according to FXStreet data",
+      "published": "Wed, 05 Aug 2026 09:30:12 GMT",
+      "link": "https://www.fxstreet.com/news/silver-price-today-silver-rises-according-to-fxstreet-data-202608050930"
+    },
+    {
+      "source": "FXStreet - News",
+      "title": "New Zealand Dollar comes under pressure after sharp deterioration in labor market",
+      "published": "Wed, 05 Aug 2026 09:29:14 GMT",
+      "link": "https://www.fxstreet.com/news/new-zealand-dollar-comes-under-pressure-after-sharp-deterioration-in-labor-market-202608050929"
+    },
+    {
+      "source": "FXStreet - News",
+      "title": "Danish Krone: Weakness seen as structural against Euro – Nordea",
+      "published": "Wed, 05 Aug 2026 09:16:00 GMT",
+      "link": "https://www.fxstreet.com/news/danish-krone-weakness-seen-as-structural-against-euro-nordea-202608050916"
+    },
+    {
+      "source": "FXStreet - News",
+      "title": "GBP/USD Price Forecast: Trades around 1.3450; bulls retain control above 100-hour SMA",
+      "published": "Wed, 05 Aug 2026 09:04:55 GMT",
+      "link": "https://www.fxstreet.com/news/gbp-usd-price-forecast-trades-around-13450-bulls-retain-control-above-100-hour-sma-202608050904"
+    },
+    {
+      "source": "FXStreet - News",
+      "title": "Euro gains against Canadian Dollar following improved PMI data",
+      "published": "Wed, 05 Aug 2026 09:00:45 GMT",
+      "link": "https://www.fxstreet.com/news/euro-gains-against-canada-dollar-following-improved-pmi-data-202608050900"
+    }
+  ],
+  "news_errors": []
+}
