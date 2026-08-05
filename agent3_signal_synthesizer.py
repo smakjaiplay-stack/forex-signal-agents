@@ -143,8 +143,6 @@ def synthesize(news_data, tech_data):
             "note": "No valid technical results to synthesize a signal from.",
         }
 
-    # Prefer non-risky candidates; among those, highest |score|.
-    # If all candidates are risky, fall back to highest |score| overall but flag it.
     non_risky = [c for c in candidates if not c["risky_pending_news"]]
     pool = non_risky if non_risky else candidates
     pool_sorted = sorted(pool, key=lambda c: c["abs_score"], reverse=True)
@@ -200,6 +198,8 @@ def main():
     parser.add_argument("--news", default="news_summary.json", help="Path to Agent 1 output")
     parser.add_argument("--technical", default="technical_analysis.json", help="Path to Agent 2 output")
     parser.add_argument("--out", default="signal.json", help="Output JSON file path")
+    parser.add_argument("--open-trade-out", default="open_trade.json",
+                         help="Where to (re)write today's open-trade state for Agent 5")
     args = parser.parse_args()
 
     news_data = load_json(args.news)
@@ -219,6 +219,35 @@ def main():
         json.dump(output, f, ensure_ascii=False, indent=2)
 
     print(json.dumps(output, ensure_ascii=False, indent=2))
+
+    # Reset the open-trade state for Agent 5 (Price Watcher) whenever a
+    # fresh daily signal is produced. This overwrites any leftover state
+    # from the previous day so alerts/trailing-SL start clean.
+    signal = output.get("signal")
+    if signal and signal.get("action") in ("Buy", "Sell"):
+        open_trade = {
+            "pair": signal["pair"],
+            "action": signal["action"],
+            "entry_price": signal["open_price"],
+            "take_profit_1": signal["take_profit_1"],
+            "take_profit_2": signal["take_profit_2"],
+            "take_profit_3": signal["take_profit_3"],
+            "stop_loss": signal["stop_loss"],
+            "current_sl": signal["stop_loss"],
+            "opened_at": output["generated_at"],
+            "closed": False,
+            "alerts_sent": {"tp1": False, "tp2": False, "tp3": False, "sl": False},
+        }
+    else:
+        open_trade = {
+            "pair": signal["pair"] if signal else None,
+            "action": "Wait",
+            "closed": True,
+            "opened_at": output["generated_at"],
+        }
+
+    with open(args.open_trade_out, "w", encoding="utf-8") as f:
+        json.dump(open_trade, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
