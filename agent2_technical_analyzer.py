@@ -23,8 +23,9 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
-# Major forex pairs -> Yahoo Finance ticker symbols
+# Forex pairs + gold -> Yahoo Finance ticker symbols
 DEFAULT_PAIRS = {
+    # Majors
     "EURUSD": "EURUSD=X",
     "GBPUSD": "GBPUSD=X",
     "USDJPY": "USDJPY=X",
@@ -32,6 +33,34 @@ DEFAULT_PAIRS = {
     "USDCAD": "USDCAD=X",
     "NZDUSD": "NZDUSD=X",
     "USDCHF": "USDCHF=X",
+    # EUR crosses
+    "EURGBP": "EURGBP=X",
+    "EURJPY": "EURJPY=X",
+    "EURAUD": "EURAUD=X",
+    "EURCAD": "EURCAD=X",
+    "EURCHF": "EURCHF=X",
+    "EURNZD": "EURNZD=X",
+    # GBP crosses
+    "GBPJPY": "GBPJPY=X",
+    "GBPAUD": "GBPAUD=X",
+    "GBPCAD": "GBPCAD=X",
+    "GBPCHF": "GBPCHF=X",
+    "GBPNZD": "GBPNZD=X",
+    # JPY crosses
+    "AUDJPY": "AUDJPY=X",
+    "CADJPY": "CADJPY=X",
+    "CHFJPY": "CHFJPY=X",
+    "NZDJPY": "NZDJPY=X",
+    # AUD/NZD/CAD/CHF crosses
+    "AUDNZD": "AUDNZD=X",
+    "AUDCAD": "AUDCAD=X",
+    "AUDCHF": "AUDCHF=X",
+    "NZDCAD": "NZDCAD=X",
+    "NZDCHF": "NZDCHF=X",
+    "CADCHF": "CADCHF=X",
+    # Metals
+    "XAUUSD": "GC=F",   # Gold futures (Yahoo Finance) — tends to have more reliable data than XAUUSD=X
+    "XAGUSD": "SI=F",   # Silver futures, included alongside gold
 }
 
 
