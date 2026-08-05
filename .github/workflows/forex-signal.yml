@@ -1,0 +1,28 @@
+name: Forex Signal Pipeline
+
+on:
+  schedule:
+    # 00:00 UTC = 07:00 Bangkok time, Monday-Friday (forex trading days)
+    # Adjust the cron expression below if you want a different time.
+    - cron: "0 0 * * 1-5"
+  workflow_dispatch: {}   # lets you manually trigger a run from the Actions tab
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run all 4 agents
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        run: python run_all.py
