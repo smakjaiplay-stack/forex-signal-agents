@@ -33,17 +33,36 @@ def build_message_text(signal_data: dict) -> str:
     if not signal:
         return "⚠️ Forex Signal Bot: no valid signal today.\n" + str(signal_data.get("note", ""))
 
-    direction_emoji = {"bullish": "🟢 BUY", "bearish": "🔴 SELL", "neutral": "⚪ NEUTRAL"}
-    direction_label = direction_emoji.get(signal["direction"], signal["direction"].upper())
-
-    confidence_emoji = {"high": "🔥", "medium": "⚖️", "low": "⚠️"}
-    conf_label = confidence_emoji.get(signal["confidence"], "")
+    action = signal.get("action", "Wait")
+    action_emoji = {"Buy": "🟢 Buy", "Sell": "🔴 Sell", "Wait": "⚪ Wait"}.get(action, action)
 
     lines = [
-        f"📊 Forex Signal — {signal['pair']}",
-        f"{direction_label}  |  Confidence: {signal['confidence']} {conf_label}",
-        f"Ref price: {signal['entry_reference']}",
-        f"Support: {signal['support']} | Resistance: {signal['resistance']}",
+        f"📊 {signal['pair']}",
+        "",
+        f"Action: {action_emoji}",
+        f"Status: {signal.get('status', '-')}",
+        f"Possibility: {signal.get('possibility_percent', '-')}%",
+        "",
+        f"Opening Time: {signal.get('opening_time', '-')}",
+        f"Open Price: {signal.get('open_price', '-')}",
+    ]
+
+    if action in ("Buy", "Sell"):
+        lines += [
+            f"Take Profit 1: {signal.get('take_profit_1', '-')}",
+            f"Take Profit 2: {signal.get('take_profit_2', '-')}",
+            f"Take Profit 3: {signal.get('take_profit_3', '-')}",
+            "",
+            f"Stop Loss: {signal.get('stop_loss', '-')}",
+        ]
+
+    lines += [
+        f"Profit/Loss: {signal.get('profit_loss', '-')}",
+        f"Trade result: {signal.get('trade_result', '-')}",
+        "",
+        f"Time frame: {signal.get('time_frame', '-')}",
+        f"Last update: {signal.get('last_update', '-')}",
+        f"Comment: {signal.get('comment', '-')}",
         "",
         "Reasons:",
     ]
