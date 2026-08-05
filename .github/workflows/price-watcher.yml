@@ -1,0 +1,39 @@
+name: Price Watcher (Hourly)
+
+on:
+  schedule:
+    # Every hour, all days (forex trades ~24/5) — safest option for GitHub
+    # Actions minutes and Yahoo Finance rate limits.
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # needed to commit the updated open_trade.json back to the repo
+
+jobs:
+  watch-price:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Agent 5 - Price Watcher
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        run: python agent5_price_watcher.py
+
+      - name: Commit updated trade state (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add open_trade.json
+          git diff --staged --quiet || git commit -m "Update open_trade.json [skip ci]"
+          git push
