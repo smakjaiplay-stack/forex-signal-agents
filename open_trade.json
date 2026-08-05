@@ -6,13 +6,15 @@
   "take_profit_2": 1.15474,
   "take_profit_3": 1.15487,
   "stop_loss": 1.15048,
-  "current_sl": 1.15048,
+  "current_sl": 1.15447,
   "opened_at": "2026-08-05T09:52:26.816838+00:00",
   "closed": false,
   "alerts_sent": {
-    "tp1": false,
+    "tp1": true,
     "tp2": false,
     "tp3": false,
     "sl": false
-  }
+  },
+  "last_checked": "2026-08-05T11:24:22.901296+00:00",
+  "last_price": 1.155001163482666
 }
