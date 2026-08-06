@@ -1,20 +1,18 @@
 {
-  "pair": "EURUSD",
+  "pair": "NZDUSD",
   "action": "Buy",
-  "entry_price": 1.15447,
-  "take_profit_1": 1.1546,
-  "take_profit_2": 1.15474,
-  "take_profit_3": 1.15487,
-  "stop_loss": 1.15048,
-  "current_sl": 1.15474,
-  "opened_at": "2026-08-05T09:52:26.816838+00:00",
-  "closed": true,
+  "entry_price": 0.58886,
+  "take_profit_1": 0.58916,
+  "take_profit_2": 0.58946,
+  "take_profit_3": 0.58976,
+  "stop_loss": 0.5862,
+  "current_sl": 0.5862,
+  "opened_at": "2026-08-06T03:22:13.532144+00:00",
+  "closed": false,
   "alerts_sent": {
-    "tp1": true,
-    "tp2": true,
-    "tp3": true,
+    "tp1": false,
+    "tp2": false,
+    "tp3": false,
     "sl": false
-  },
-  "last_checked": "2026-08-05T16:44:48.422821+00:00",
-  "last_price": 1.1548677682876587
+  }
 }
