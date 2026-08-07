@@ -1,31 +1,58 @@
 {
-  "generated_at": "2026-08-05T17:16:16.332084+00:00",
+  "generated_at": "2026-08-07T03:09:22.895710+00:00",
   "calendar_events_today": [
     {
-      "time": "2026-08-05T08:15:00-04:00",
-      "currency": "USD",
-      "title": "ADP Non-Farm Employment Change",
-      "impact": "Medium",
-      "forecast": "68K",
-      "previous": "98K",
+      "time": "2026-08-07T08:30:00-04:00",
+      "currency": "CAD",
+      "title": "Employment Change",
+      "impact": "High",
+      "forecast": "17.8K",
+      "previous": "18.2K",
       "actual": null
     },
     {
-      "time": "2026-08-05T10:00:00-04:00",
-      "currency": "USD",
-      "title": "ISM Services PMI",
-      "impact": "Medium",
-      "forecast": "54.5",
-      "previous": "54.0",
+      "time": "2026-08-07T08:30:00-04:00",
+      "currency": "CAD",
+      "title": "Unemployment Rate",
+      "impact": "High",
+      "forecast": "6.5%",
+      "previous": "6.5%",
       "actual": null
     },
     {
-      "time": "2026-08-05T16:30:00-04:00",
+      "time": "2026-08-07T08:30:00-04:00",
       "currency": "USD",
-      "title": "President Trump Speaks",
+      "title": "Average Hourly Earnings m/m",
+      "impact": "High",
+      "forecast": "0.3%",
+      "previous": "0.3%",
+      "actual": null
+    },
+    {
+      "time": "2026-08-07T08:30:00-04:00",
+      "currency": "USD",
+      "title": "Non-Farm Employment Change",
+      "impact": "High",
+      "forecast": "85K",
+      "previous": "57K",
+      "actual": null
+    },
+    {
+      "time": "2026-08-07T08:30:00-04:00",
+      "currency": "USD",
+      "title": "Unemployment Rate",
+      "impact": "High",
+      "forecast": "4.2%",
+      "previous": "4.2%",
+      "actual": null
+    },
+    {
+      "time": "2026-08-07T10:00:00-04:00",
+      "currency": "CAD",
+      "title": "Ivey PMI",
       "impact": "Medium",
-      "forecast": "",
-      "previous": "",
+      "forecast": "55.4",
+      "previous": "56.2",
       "actual": null
     }
   ],
@@ -33,15 +60,39 @@
   "news_headlines": [
     {
       "source": "Investing.com - Forex News",
-      "title": "Japan’s intervention stabilizes yen as dollar weakens",
-      "published": "2026-08-05 16:56:17",
-      "link": "https://www.investing.com/news/forex-news/japans-intervention-stabilizes-yen-as-dollar-weakens-93CH-4838837"
+      "title": "Dollar firms on safe haven boost, rising yields; yen hits 158 after intervention",
+      "published": "2026-08-06 18:39:23",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-subdued-dollar-near-7wk-low-with-iran-talks-us-jobs-data-in-focus-4839999"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Dollar edge lower holds near six-week low as Middle East diplomacy limits FX moves",
-      "published": "2026-08-05 14:03:38",
+      "title": "Canada’s dollar to hold steady before modest gains, poll shows",
+      "published": "2026-08-06 14:29:33",
+      "link": "https://www.investing.com/news/forex-news/canadas-dollar-to-hold-steady-before-modest-gains-poll-shows-93CH-4842908"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Treasuries edge upward as traders weigh energy risks and divided Fed hike bets",
+      "published": "2026-08-06 12:01:08",
+      "link": "https://www.investing.com/news/forex-news/german-yields-hold-steady-at-3week-lows-as-easing-oil-cools-ecb-hike-bets-4840076"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Sterling today: Pound slips as dollar steadies ahead of U.S. payrolls",
+      "published": "2026-08-06 10:58:36",
+      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-slips-as-dollar-steadies-ahead-of-us-payrolls-4841228"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Dollar hits seven-week low amid Hormuz deal hopes; yen holds intervention gains",
+      "published": "2026-08-05 18:02:30",
       "link": "https://www.investing.com/news/forex-news/asia-fx-gains-as-dollar-hovers-near-6wk-low-rupee-higher-after-rbi-rate-hold-4836384"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Japan’s intervention stabilizes yen as dollar weakens",
+      "published": "2026-08-05 16:56:17",
+      "link": "https://www.investing.com/news/forex-news/japans-intervention-stabilizes-yen-as-dollar-weakens-93CH-4838837"
     },
     {
       "source": "Investing.com - Forex News",
@@ -56,76 +107,52 @@
       "link": "https://www.investing.com/news/forex-news/german-yields-drop-to-3week-lows-as-easing-oil-cools-inflation-bets-4836423"
     },
     {
-      "source": "Investing.com - Forex News",
-      "title": "Sterling today: Pound holds above $1.34 as dollar stays firm on Fed hike risk",
-      "published": "2026-08-05 08:27:50",
-      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-holds-above-134-as-dollar-stays-firm-on-fed-hike-risk-4836614"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Dollar little changed, yen weakens but remains well above pre-intervention low",
-      "published": "2026-08-04 19:45:03",
-      "link": "https://www.investing.com/news/forex-news/asia-fx-mixed-with-usiran-talks-in-focus-yen-dips-after-interventionled-rally-4832755"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Canadian dollar weakens as oil prices fall on trade data",
-      "published": "2026-08-04 17:48:27",
-      "link": "https://www.investing.com/news/forex-news/canadian-dollar-weakens-as-oil-prices-fall-on-trade-data-93CH-4835463"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Yen slips but holds most gains after US-Japan intervention",
-      "published": "2026-08-04 17:12:22",
-      "link": "https://www.investing.com/news/forex-news/yen-slips-but-holds-most-gains-after-usjapan-intervention-93CH-4835376"
+      "source": "FXStreet - News",
+      "title": "China’s July Trade Balance: Surplus widens more than expected to $112.5 billion",
+      "published": "Fri, 07 Aug 2026 02:59:29 GMT",
+      "link": "https://www.fxstreet.com/news/chinas-june-trade-balance-surplus-widens-more-than-expected-to-1125-billion-202608070259"
     },
     {
       "source": "FXStreet - News",
-      "title": "Dow Jones Industrial Average takes another record on Tehran's terms",
-      "published": "Wed, 05 Aug 2026 16:59:44 GMT",
-      "link": "https://www.fxstreet.com/news/dow-jones-industrial-average-takes-another-record-on-tehrans-terms-202608051659"
+      "title": "United States Dollar Index holds steady near 100.00 as bulls await US NFP amid Iran risks",
+      "published": "Fri, 07 Aug 2026 02:49:55 GMT",
+      "link": "https://www.fxstreet.com/news/united-states-dollar-index-holds-steady-near-10000-as-bulls-await-us-nfp-amid-iran-risks-202608070249"
     },
     {
       "source": "FXStreet - News",
-      "title": "Japanese Yen consolidates as traders weigh weak US data, market sentiment",
-      "published": "Wed, 05 Aug 2026 16:28:28 GMT",
-      "link": "https://www.fxstreet.com/news/japanese-yen-consolidates-as-traders-weigh-weak-us-data-market-sentiment-202608051628"
+      "title": "Australian Dollar bulls remains on the sidelines as Iran risks support USD ahead of US NFP",
+      "published": "Fri, 07 Aug 2026 02:17:21 GMT",
+      "link": "https://www.fxstreet.com/news/australian-dollar-bulls-remains-on-the-sidelines-as-iran-risks-support-usd-ahead-of-us-nfp-202608070217"
     },
     {
       "source": "FXStreet - News",
-      "title": "US Dollar slips as ADP collapse offsets hot services",
-      "published": "Wed, 05 Aug 2026 16:18:46 GMT",
-      "link": "https://www.fxstreet.com/news/us-dollar-slips-as-adp-collapse-offsets-hot-services-202608051618"
+      "title": "Euro weakens against US Dollar amid Middle East tensions",
+      "published": "Fri, 07 Aug 2026 01:54:37 GMT",
+      "link": "https://www.fxstreet.com/news/euro-weakens-against-us-dollar-amid-middle-east-tensions-202608070154"
     },
     {
       "source": "FXStreet - News",
-      "title": "British Pound rises as soft ADP jobs report weighs on Dollar, NFP looms",
-      "published": "Wed, 05 Aug 2026 16:04:41 GMT",
-      "link": "https://www.fxstreet.com/news/british-pound-rises-as-soft-adp-weighs-on-dollar-nfp-looms-202608051604"
+      "title": "Gold consolidates below recent highs as USD strength and Fed hike bets cap ahead of US NFP",
+      "published": "Fri, 07 Aug 2026 01:35:01 GMT",
+      "link": "https://www.fxstreet.com/news/gold-consolidates-below-recent-highs-as-usd-strength-and-fed-hike-bets-cap-ahead-of-us-nfp-202608070135"
     },
     {
       "source": "FXStreet - News",
-      "title": "Silver Price Forecast: Daily momentum improves, but weekly outlook stays bearish",
-      "published": "Wed, 05 Aug 2026 15:13:54 GMT",
-      "link": "https://www.fxstreet.com/news/silver-price-forecast-daily-momentum-improves-but-weekly-outlook-stays-bearish-202608051513"
+      "title": "Canadian Dollar weakens as safe-haven demand supports US Dollar",
+      "published": "Fri, 07 Aug 2026 01:19:48 GMT",
+      "link": "https://www.fxstreet.com/news/canadian-dollar-weakens-as-safe-haven-demand-supports-us-dollar-202608070119"
     },
     {
       "source": "FXStreet - News",
-      "title": "Euro steadies against Japanese Yen as Eurozone PMIs beat forecasts",
-      "published": "Wed, 05 Aug 2026 15:08:37 GMT",
-      "link": "https://www.fxstreet.com/news/euro-steadies-as-eurozone-pmis-beat-forecasts-202608051508"
+      "title": "PBOC sets USD/CNY reference rate at 6.7904 vs. 6.7895 previous",
+      "published": "Fri, 07 Aug 2026 01:15:29 GMT",
+      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67904-vs-67895-previous-202608070115"
     },
     {
       "source": "FXStreet - News",
-      "title": "Australian Dollar climbs as softer US data, improving risk sentiment weigh on USD",
-      "published": "Wed, 05 Aug 2026 15:04:10 GMT",
-      "link": "https://www.fxstreet.com/news/australian-dollar-climbs-as-softer-us-data-improving-risk-sentiment-weigh-on-the-usd-202608051504"
-    },
-    {
-      "source": "FXStreet - News",
-      "title": "Euro: Recovery holds within 1.15–1.16 band against US Dollar  – Scotiabank",
-      "published": "Wed, 05 Aug 2026 14:57:44 GMT",
-      "link": "https://www.fxstreet.com/news/euro-recovery-holds-within-115-116-band-against-us-dollar-scotiabank-202608051457"
+      "title": "Japanese Yen hangs near weekly low after weak spending data as USD bulls await US NFP",
+      "published": "Fri, 07 Aug 2026 01:10:39 GMT",
+      "link": "https://www.fxstreet.com/news/japanese-yen-hangs-near-weekly-low-after-weak-spending-data-as-usd-bulls-await-us-nfp-202608070110"
     }
   ],
   "news_errors": []
