@@ -1,1 +1,2 @@
 {"pair": "NZDUSD", "action": "Buy", "entry_price": 0.58817, "outcome": "SL", "exit_price": 0.5887, "r_multiple": 0.269, "tp1": true, "tp2": true, "tp3": false, "opened_at": "2026-08-05T17:16:21.614349+00:00", "closed_at": "2026-08-06T03:40:30.693688+00:00"}
+{"pair": "AUDUSD", "action": "Sell", "entry_price": 0.70274, "outcome": "SL", "exit_price": 0.70269, "r_multiple": 0.014, "tp1": true, "tp2": true, "tp3": false, "opened_at": "2026-08-07T03:09:25.451568+00:00", "closed_at": "2026-08-07T03:52:20.918779+00:00"}

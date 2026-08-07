@@ -6,13 +6,17 @@
   "take_profit_2": 0.70264,
   "take_profit_3": 0.70259,
   "stop_loss": 0.70631,
-  "current_sl": 0.70631,
+  "current_sl": 0.70269,
   "opened_at": "2026-08-07T03:09:25.451568+00:00",
-  "closed": false,
+  "closed": true,
   "alerts_sent": {
-    "tp1": false,
-    "tp2": false,
+    "tp1": true,
+    "tp2": true,
     "tp3": false,
     "sl": false
-  }
+  },
+  "outcome": "SL",
+  "exit_price": 0.70269,
+  "r_multiple": 0.014,
+  "closed_at": "2026-08-07T03:52:20.918779+00:00"
 }
