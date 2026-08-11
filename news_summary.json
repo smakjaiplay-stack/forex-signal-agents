@@ -1,8 +1,81 @@
 {
-  "generated_at": "2026-08-10T02:22:41.697935+00:00",
-  "calendar_events_today": [],
+  "generated_at": "2026-08-11T02:13:16.040065+00:00",
+  "calendar_events_today": [
+    {
+      "time": "2026-08-11T00:30:00-04:00",
+      "currency": "AUD",
+      "title": "Cash Rate",
+      "impact": "High",
+      "forecast": "4.35%",
+      "previous": "4.35%",
+      "actual": null
+    },
+    {
+      "time": "2026-08-11T00:30:00-04:00",
+      "currency": "AUD",
+      "title": "RBA Monetary Policy Statement",
+      "impact": "High",
+      "forecast": "",
+      "previous": "",
+      "actual": null
+    },
+    {
+      "time": "2026-08-11T00:30:00-04:00",
+      "currency": "AUD",
+      "title": "RBA Rate Statement",
+      "impact": "High",
+      "forecast": "",
+      "previous": "",
+      "actual": null
+    },
+    {
+      "time": "2026-08-11T01:30:00-04:00",
+      "currency": "AUD",
+      "title": "RBA Press Conference",
+      "impact": "High",
+      "forecast": "",
+      "previous": "",
+      "actual": null
+    }
+  ],
   "calendar_error": null,
   "news_headlines": [
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Ukrainian central bank issues biggest currency liberalisation since 2022 invasion",
+      "published": "2026-08-10 22:30:50",
+      "link": "https://www.investing.com/news/forex-news/ukrainian-central-bank-issues-biggest-currency-liberalisation-since-2022-invasion-4850562"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Canadian dollar holds near eight-week high on oil gains",
+      "published": "2026-08-10 19:56:35",
+      "link": "https://www.investing.com/news/forex-news/canadian-dollar-holds-near-eightweek-high-on-oil-gains-93CH-4850073"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Dollar rises after two-week losing streak, yen gives up more intervention gains",
+      "published": "2026-08-10 19:32:40",
+      "link": "https://www.investing.com/news/forex-news/south-korean-won-leads-asian-fx-losses-as-dollar-edges-higher-yen-weakens-4847818"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Deutsche Bank named as China’s first European renminbi clearing bank",
+      "published": "2026-08-10 15:40:29",
+      "link": "https://www.investing.com/news/forex-news/deutsche-bank-named-as-chinas-first-european-renminbi-clearing-bank-93CH-4849850"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "U.S. yields pause after payroll-fueled rally; Bunds hold ahead of key data",
+      "published": "2026-08-10 12:11:14",
+      "link": "https://www.investing.com/news/forex-news/bunds-consolidate-as-traders-weigh-sinking-us-payrolls-against-oil-rise-4847858"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Sterling today: Pound firms as soft U.S. jobs data weighs on dollar",
+      "published": "2026-08-10 08:25:02",
+      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-firms-as-soft-us-jobs-data-weighs-on-dollar-4848017"
+    },
     {
       "source": "Investing.com - Forex News",
       "title": "How coordinated currency buying interventions work",
@@ -16,88 +89,52 @@
       "link": "https://www.investing.com/news/forex-news/strategist-explains-why-us-yen-support-is-built-to-fail-4847690"
     },
     {
-      "source": "Investing.com - Forex News",
-      "title": "Why is the bearish yen sentiment still strong?",
-      "published": "2026-08-07 23:58:39",
-      "link": "https://www.investing.com/news/forex-news/why-is-the-bearish-yen-sentiment-still-strong-4847548"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "CFTC reports financial futures open interest data for Aug. 4",
-      "published": "2026-08-07 19:40:07",
-      "link": "https://www.investing.com/news/forex-news/cftc-reports-financial-futures-open-interest-data-for-aug-4-93CH-4847331"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Dollar falls as Fed rate hike bets ease; yen set to hold intervention gains",
-      "published": "2026-08-07 19:34:05",
-      "link": "https://www.investing.com/news/forex-news/asia-fx-rangebound-dollar-firms-amid-iran-peace-uncertainty-us-jobs-caution-4845065"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "US sanctions Dubai crypto exchange for aiding Iran’s IRGC, following a Reuters report",
-      "published": "2026-08-07 17:49:10",
-      "link": "https://www.investing.com/news/forex-news/us-sanctions-dubai-crypto-exchange-for-aiding-irans-irgc-following-a-reuters-report-4847273"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "U.S. Treasuries surge  on shock U.S. job losses",
-      "published": "2026-08-07 12:58:00",
-      "link": "https://www.investing.com/news/forex-news/european-bonds-cap-best-week-since-june-as-easing-oil-snaps-bund-selloff-4845170"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Sterling today: Pound dips as payroll risk buoys dollar broadly",
-      "published": "2026-08-07 09:08:57",
-      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-dips-as-payroll-risk-buoys-dollar-broadly-4845472"
+      "source": "FXStreet - News",
+      "title": "RBA set to hold interest rate as softer inflation shifts outlook",
+      "published": "Tue, 11 Aug 2026 00:30:00 GMT",
+      "link": "https://www.fxstreet.com/news/rba-set-to-hold-interest-rate-at-435-as-softer-inflation-cools-hike-bets-202608110030"
     },
     {
       "source": "FXStreet - News",
-      "title": "Japanese Yen comes under pressure as BoJ division, narrowing surplus",
-      "published": "Mon, 10 Aug 2026 02:02:06 GMT",
-      "link": "https://www.fxstreet.com/news/japanese-yen-comes-under-pressure-as-boj-division-narrowing-surplus-202608100202"
+      "title": "Breaking: Gold rallies further beyond $4,400; highest since early June",
+      "published": "Tue, 11 Aug 2026 01:40:14 GMT",
+      "link": "https://www.fxstreet.com/news/breaking-gold-rallies-further-beyond-4-400-highest-since-early-june-202608110140"
     },
     {
       "source": "FXStreet - News",
-      "title": "British Pound moves away from multi-week top as Hormuz risks support USD",
-      "published": "Mon, 10 Aug 2026 01:59:27 GMT",
-      "link": "https://www.fxstreet.com/news/british-pound-moves-away-from-multi-week-top-as-hormuz-risks-support-usd-202608100159"
+      "title": "Silver Price Forecast: XAG/USD slips to near $66.00 on Fed hike fears, oil surge",
+      "published": "Tue, 11 Aug 2026 01:37:48 GMT",
+      "link": "https://www.fxstreet.com/news/silver-price-forecast-xag-usd-slips-to-near-6600-on-fed-hike-fears-oil-surge-202608110137"
     },
     {
       "source": "FXStreet - News",
-      "title": "Euro consolidates below its highest level since June 17 as Mideast tensions support USD",
-      "published": "Mon, 10 Aug 2026 01:35:29 GMT",
-      "link": "https://www.fxstreet.com/news/euro-consolidates-below-its-highest-level-since-june-17-as-mideast-tensions-support-usd-202608100135"
+      "title": "United States Dollar Index consolidates below 100.00 as bulls await US CPI amid Iran risks",
+      "published": "Tue, 11 Aug 2026 01:18:11 GMT",
+      "link": "https://www.fxstreet.com/news/united-states-dollar-index-consolidates-below-10000-as-bulls-await-us-cpi-amid-iran-risks-202608110118"
     },
     {
       "source": "FXStreet - News",
-      "title": "Hormuz tensions escalate as unconfirmed missile attack amid fragile US-Iran talks",
-      "published": "Mon, 10 Aug 2026 01:17:03 GMT",
-      "link": "https://www.fxstreet.com/news/hormuz-tensions-escalate-as-unconfirmed-missile-attack-amid-fragile-us-iran-talks-202608100117"
+      "title": "PBOC sets USD/CNY reference rate at 6.7900 vs. 6.7884 previous",
+      "published": "Tue, 11 Aug 2026 01:15:31 GMT",
+      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67900-vs-67884-previous-202608110115"
     },
     {
       "source": "FXStreet - News",
-      "title": "PBOC sets USD/CNY reference rate at 6.7884 vs. 6.7904 previous",
-      "published": "Mon, 10 Aug 2026 01:15:37 GMT",
-      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67884-vs-67904-previous-202608100115"
+      "title": "WTI hovers around $81.50 as US-Iran peace talks stall",
+      "published": "Tue, 11 Aug 2026 01:02:27 GMT",
+      "link": "https://www.fxstreet.com/news/wti-hovers-around-8150-as-us-iran-peace-talks-stall-202608110102"
     },
     {
       "source": "FXStreet - News",
-      "title": "BoJ Summary of Opinions: Board split on pace of rate hikes amid inflation risk",
-      "published": "Mon, 10 Aug 2026 00:55:12 GMT",
-      "link": "https://www.fxstreet.com/news/boj-summary-of-opinions-board-split-on-pace-of-rate-hikes-amid-inflation-risk-202608100055"
+      "title": "Intervention bought the Japanese Yen a price, not a buyer",
+      "published": "Mon, 10 Aug 2026 23:32:14 GMT",
+      "link": "https://www.fxstreet.com/news/intervention-bought-the-japanese-yen-a-price-not-a-buyer-202608102332"
     },
     {
       "source": "FXStreet - News",
-      "title": "WTI rises to near $79.50 amid uncertainty over reopening Strait of Hormuz",
-      "published": "Mon, 10 Aug 2026 00:48:20 GMT",
-      "link": "https://www.fxstreet.com/news/wti-slips-below-7650-despite-uncertainty-over-reopening-strait-of-hormuz-202608100048"
-    },
-    {
-      "source": "FXStreet - News",
-      "title": "China: Credit demand and liquidity trends – DBS",
-      "published": "Fri, 07 Aug 2026 21:51:00 GMT",
-      "link": "https://www.fxstreet.com/news/china-credit-demand-and-liquidity-trends-dbs-202608072151"
+      "title": "The Australian Dollar rallies without an Australian reason",
+      "published": "Mon, 10 Aug 2026 23:31:37 GMT",
+      "link": "https://www.fxstreet.com/news/the-australian-dollar-rallies-without-an-australian-reason-202608102331"
     }
   ],
   "news_errors": []
