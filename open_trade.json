@@ -1,23 +1,18 @@
 {
   "pair": "USDCHF",
   "action": "Buy",
-  "entry_price": 0.81002,
-  "take_profit_1": 0.81094,
-  "take_profit_2": 0.81187,
-  "take_profit_3": 0.81279,
-  "stop_loss": 0.80706,
-  "current_sl": 0.81094,
-  "opened_at": "2026-08-11T02:13:18.759671+00:00",
-  "closed": true,
+  "entry_price": 0.8116,
+  "take_profit_1": 0.81166,
+  "take_profit_2": 0.81172,
+  "take_profit_3": 0.81178,
+  "stop_loss": 0.80717,
+  "current_sl": 0.80717,
+  "opened_at": "2026-08-12T02:31:26.231490+00:00",
+  "closed": false,
   "alerts_sent": {
-    "tp1": true,
-    "tp2": true,
+    "tp1": false,
+    "tp2": false,
     "tp3": false,
     "sl": false
-  },
-  "last_checked_at": "2026-08-11T17:00:53.770290+00:00",
-  "outcome": "SL",
-  "exit_price": 0.81094,
-  "r_multiple": 0.311,
-  "closed_at": "2026-08-11T19:07:00.153783+00:00"
+  }
 }
