@@ -51,11 +51,14 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
-from agent2_technical_analyzer import DEFAULT_PAIRS, calc_rsi, calc_macd
+from agent2_technical_analyzer import DEFAULT_PAIRS, calc_rsi, calc_macd, calc_atr
 from agent3_signal_synthesizer import (
+    DEFAULT_ATR_MULT,
+    DEFAULT_MIN_RR,
     decimals_for_pair,
     build_trade_levels,
     possibility_percent,
+    risk_reward,
 )
 
 
@@ -96,6 +99,7 @@ def compute_indicators(df: pd.DataFrame):
     df["ema50"] = close.ewm(span=50, adjust=False).mean()
     df["rsi14"] = calc_rsi(close)
     macd_line, signal_line, _ = calc_macd(close)
+    df["atr14"] = calc_atr(df)
     df["macd"] = macd_line
     df["macd_signal"] = signal_line
     df["support"] = close.rolling(50).min()
@@ -179,7 +183,8 @@ def simulate_trade(pair: str, hist: pd.DataFrame, entry_idx: int, action: str,
             "tp1": tp1_hit, "tp2": tp2_hit, "tp3": tp3_hit}
 
 
-def run_backtest(pairs, period, interval, bars_per_day, delay):
+def run_backtest(pairs, period, interval, bars_per_day, delay,
+                 atr_mult=DEFAULT_ATR_MULT, min_rr=DEFAULT_MIN_RR):
     print(f"Downloading {interval} history ({period}) for {len(pairs)} pairs...")
     data = {}
     for pair in pairs:
@@ -229,8 +234,16 @@ def run_backtest(pairs, period, interval, bars_per_day, delay):
         support = float(row["support"])
         resistance = float(row["resistance"])
         ndigits = decimals_for_pair(pair)
-        levels = build_trade_levels(action, entry, support, resistance, ndigits)
+        atr = float(row["atr14"]) if not pd.isna(row["atr14"]) else None
+        levels = build_trade_levels(action, entry, support, resistance, ndigits,
+                                    atr=atr, atr_mult=atr_mult)
         if not levels:
+            continue
+
+        # Same reward/risk gate Agent 3 applies live, so the backtest measures
+        # the trades the live system would actually take.
+        rr = risk_reward(entry, levels["take_profit_3"], levels["stop_loss"])
+        if min_rr > 0 and (rr is None or rr < min_rr):
             continue
 
         result = simulate_trade(
@@ -242,6 +255,7 @@ def run_backtest(pairs, period, interval, bars_per_day, delay):
             result["timestamp"] = str(df.index[idx])
             result["action"] = action
             result["score"] = score
+            result["risk_reward"] = round(rr, 2)
             trades.append(result)
 
     return trades
@@ -314,9 +328,14 @@ def main():
     parser.add_argument("--delay", type=float, default=3.0,
                          help="Seconds to pause before each pair's download, to avoid Yahoo Finance rate limits")
     parser.add_argument("--out", default="backtest_trades.json", help="Where to save the raw trade log")
+    parser.add_argument("--atr-mult", type=float, default=DEFAULT_ATR_MULT,
+                         help="Cap the stop-loss at this many ATRs from entry (0 = old uncapped behavior)")
+    parser.add_argument("--min-rr", type=float, default=DEFAULT_MIN_RR,
+                         help="Skip setups whose reward/risk is below this (0 = take every setup)")
     args = parser.parse_args()
 
-    trades = run_backtest(args.pairs, args.period, args.interval, args.bars_per_day, args.delay)
+    trades = run_backtest(args.pairs, args.period, args.interval, args.bars_per_day, args.delay,
+                          atr_mult=args.atr_mult, min_rr=args.min_rr)
 
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(trades, f, ensure_ascii=False, indent=2)

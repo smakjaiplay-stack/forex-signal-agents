@@ -39,6 +39,10 @@ DEFAULT_TOP_N = 3
 DEFAULT_MAX_OPEN = 3
 DEFAULT_COOLDOWN_HOURS = 6
 DEFAULT_MIN_SCORE = 2
+# Stop-loss is capped at this many ATRs from entry, and a signal whose
+# reward/risk falls below DEFAULT_MIN_RR is not published at all.
+DEFAULT_ATR_MULT = 1.5
+DEFAULT_MIN_RR = 1.5
 
 
 # Currency -> which side of the pair it is doesn't matter for this rule;
@@ -90,13 +94,22 @@ def possibility_percent(abs_score: int, risky: bool) -> int:
     return max(30, min(base, 95))
 
 
-def build_trade_levels(action: str, entry: float, support: float, resistance: float, ndigits: int):
+def build_trade_levels(action: str, entry: float, support: float, resistance: float, ndigits: int,
+                       atr: float = None, atr_mult: float = DEFAULT_ATR_MULT):
     """Compute Take Profit 1/2/3 and Stop Loss from entry + support/resistance.
 
     Buy: target = resistance, stop = support (TP1 closest to entry, TP3 furthest).
     Sell: target = support, stop = resistance.
     Falls back to a small percentage-based buffer if support/resistance don't
     bracket the entry price sensibly (can happen with thin/odd data).
+
+    Taking the stop straight from the far edge of the range is what produced
+    trades risking 11 to make 1: when price is already sitting near one edge,
+    the target is a few pips away while the stop is most of the range wide.
+    So when ATR is available the stop is pulled in to at most `atr_mult` ATRs
+    from entry. That bounds risk but can't manufacture reward — a target
+    that's simply too close still yields a poor ratio, which is what the
+    `min_rr` filter in synthesize() is for.
     """
     if action not in ("Buy", "Sell"):
         return None
@@ -105,17 +118,25 @@ def build_trade_levels(action: str, entry: float, support: float, resistance: fl
     if action == "Buy":
         target = resistance if sane else entry * 1.015
         stop = support if sane else entry * 0.9925
-        tp1 = entry + (target - entry) / 3
-        tp2 = entry + (target - entry) * 2 / 3
-        tp3 = target
-        sl = stop
     else:  # Sell
         target = support if sane else entry * 0.985
         stop = resistance if sane else entry * 1.0075
+
+    # atr_mult <= 0 means "no cap" — without this guard it would collapse the
+    # stop onto the entry price, i.e. a trade that stops out instantly.
+    if atr and atr > 0 and atr_mult > 0:
+        max_risk = atr * atr_mult
+        if abs(entry - stop) > max_risk:
+            stop = entry - max_risk if action == "Buy" else entry + max_risk
+
+    if action == "Buy":
+        tp1 = entry + (target - entry) / 3
+        tp2 = entry + (target - entry) * 2 / 3
+    else:
         tp1 = entry - (entry - target) / 3
         tp2 = entry - (entry - target) * 2 / 3
-        tp3 = target
-        sl = stop
+    tp3 = target
+    sl = stop
 
     return {
         "take_profit_1": round(tp1, ndigits),
@@ -125,7 +146,15 @@ def build_trade_levels(action: str, entry: float, support: float, resistance: fl
     }
 
 
-def build_signal(candidate, time_frame):
+def risk_reward(entry: float, tp3: float, sl: float):
+    """Reward (entry->TP3) divided by risk (entry->SL). None if risk is zero."""
+    risk = abs(entry - sl)
+    if risk <= 0:
+        return None
+    return abs(tp3 - entry) / risk
+
+
+def build_signal(candidate, time_frame, atr_mult=DEFAULT_ATR_MULT):
     """Turn one ranked candidate into a full trade card."""
     if candidate["abs_score"] < 2:
         confidence = "low"
@@ -140,7 +169,8 @@ def build_signal(candidate, time_frame):
     action = {"bullish": "Buy", "bearish": "Sell", "neutral": "Wait"}[candidate["bias"]]
     ndigits = decimals_for_pair(candidate["pair"])
     levels = build_trade_levels(
-        action, candidate["last_close"], candidate["support"], candidate["resistance"], ndigits
+        action, candidate["last_close"], candidate["support"], candidate["resistance"], ndigits,
+        atr=candidate.get("atr14"), atr_mult=atr_mult,
     )
     now_utc = datetime.now(timezone.utc)
 
@@ -170,10 +200,13 @@ def build_signal(candidate, time_frame):
     }
     if levels:
         signal.update(levels)
+        rr = risk_reward(signal["open_price"], levels["take_profit_3"], levels["stop_loss"])
+        signal["risk_reward"] = round(rr, 2) if rr is not None else None
     return signal
 
 
-def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_SCORE):
+def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_SCORE,
+               min_rr=DEFAULT_MIN_RR, atr_mult=DEFAULT_ATR_MULT):
     pending_currencies = pending_high_impact_currencies(news_data)
     time_frame = tech_data.get("interval", "?")
 
@@ -195,6 +228,7 @@ def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_
             "last_close": result["last_close"],
             "support": result["support"],
             "resistance": result["resistance"],
+            "atr14": result.get("atr14"),
             "last_bar_time": result.get("last_bar_time"),
             "data_age_minutes": result.get("data_age_minutes"),
         })
@@ -215,14 +249,36 @@ def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_
     # Everything that clears the bar, not just the single best — the whole
     # point of top-N is that you get more than one option per run.
     tradable = [c for c in pool_sorted if c["bias"] != "neutral" and c["abs_score"] >= min_score]
-    chosen = tradable[:top_n] if tradable else pool_sorted[:1]
 
-    signals = [build_signal(c, time_frame) for c in chosen]
+    # A strong-looking bias is still a bad trade if the target sits a few pips
+    # away while the stop sits half a range away, so reward/risk decides what
+    # actually gets published — not just the indicator score.
+    signals, rejected = [], []
+    for candidate in tradable:
+        signal = build_signal(candidate, time_frame, atr_mult=atr_mult)
+        rr = signal.get("risk_reward")
+        if min_rr > 0 and (rr is None or rr < min_rr):
+            rejected.append({
+                "pair": signal["pair"],
+                "action": signal["action"],
+                "risk_reward": rr,
+                "reason": f"reward/risk {rr} below minimum {min_rr}",
+            })
+            continue
+        signals.append(signal)
+        if len(signals) >= top_n:
+            break
+
+    if not signals and not tradable:
+        # Nothing cleared the score bar — surface the strongest read anyway so
+        # the run still reports what the market looks like.
+        signals = [build_signal(pool_sorted[0], time_frame, atr_mult=atr_mult)]
 
     return {
         "signals": signals,
         # Kept so anything still reading the old single-signal shape works.
         "signal": signals[0] if signals else None,
+        "rejected_low_rr": rejected,
         "all_candidates": sorted(candidates, key=lambda c: c["abs_score"], reverse=True),
     }
 
@@ -310,6 +366,10 @@ def main():
                          help="Cap on simultaneously open trades across all runs")
     parser.add_argument("--min-score", type=int, default=DEFAULT_MIN_SCORE,
                          help="Minimum |technical score| for a pair to be publishable")
+    parser.add_argument("--min-rr", type=float, default=DEFAULT_MIN_RR,
+                         help="Drop signals whose reward/risk is below this (0 disables the filter)")
+    parser.add_argument("--atr-mult", type=float, default=DEFAULT_ATR_MULT,
+                         help="Cap the stop-loss at this many ATRs from entry")
     parser.add_argument("--cooldown-hours", type=float, default=DEFAULT_COOLDOWN_HOURS,
                          help="Don't re-enter a pair this soon after its last trade closed (0 disables)")
     args = parser.parse_args()
@@ -321,7 +381,8 @@ def main():
         print("[error] technical analysis data is required to synthesize a signal", file=sys.stderr)
         sys.exit(1)
 
-    result = synthesize(news_data, tech_data, top_n=args.top, min_score=args.min_score)
+    result = synthesize(news_data, tech_data, top_n=args.top, min_score=args.min_score,
+                        min_rr=args.min_rr, atr_mult=args.atr_mult)
     generated_at = datetime.now(timezone.utc).isoformat()
 
     # Decide which signals are actually new *before* writing signal.json, so
@@ -361,8 +422,12 @@ def main():
     with open(args.open_trade_out, "w", encoding="utf-8") as f:
         json.dump(open_trades + new_trades, f, ensure_ascii=False, indent=2)
 
+    for r in result.get("rejected_low_rr", []):
+        print(f"[skip] {r['pair']} {r['action']}: {r['reason']}", file=sys.stderr)
+
     print(
         f"[ok] {len(result.get('signals', []))} signal(s) published, "
+        f"{len(result.get('rejected_low_rr', []))} rejected on reward/risk, "
         f"{len(new_trades)} new trade(s) opened, "
         f"{len(open_trades) + len(new_trades)} now being watched.",
         file=sys.stderr,

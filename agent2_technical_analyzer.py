@@ -60,6 +60,24 @@ def calc_macd(close: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9)
     return macd_line, signal_line, histogram
 
 
+def calc_atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    """Average True Range (Wilder's smoothing).
+
+    Agent 3 uses this to cap how far a stop-loss can sit from entry. Without
+    it, a stop parked at the far edge of the 50-bar range can be many times
+    wider than the target, which is how the old levels produced trades
+    risking 11 to make 1.
+    """
+    high, low, close = df["High"], df["Low"], df["Close"]
+    prev_close = close.shift(1)
+    true_range = pd.concat([
+        high - low,
+        (high - prev_close).abs(),
+        (low - prev_close).abs(),
+    ], axis=1).max(axis=1)
+    return true_range.ewm(alpha=1 / period, adjust=False).mean()
+
+
 def analyze_pair(symbol: str, interval: str, period: str) -> dict:
     df = yf.download(symbol, interval=interval, period=period, progress=False, auto_adjust=True)
 
@@ -93,6 +111,12 @@ def analyze_pair(symbol: str, interval: str, period: str) -> dict:
     # How old is the candle we're pricing off? Yahoo's intraday feed lags,
     # and the last bar is still forming, so the entry price can be minutes
     # behind the market — report it instead of letting it hide.
+    atr = None
+    if {"High", "Low"}.issubset(df.columns):
+        atr_series = calc_atr(df).dropna()
+        if not atr_series.empty:
+            atr = float(atr_series.iloc[-1])
+
     last_ts = pd.Timestamp(close.index[-1])
     last_ts = last_ts.tz_localize("UTC") if last_ts.tzinfo is None else last_ts.tz_convert("UTC")
     data_age_minutes = (pd.Timestamp.now(tz="UTC") - last_ts).total_seconds() / 60
@@ -143,6 +167,7 @@ def analyze_pair(symbol: str, interval: str, period: str) -> dict:
         "macd_histogram": round(last_hist, 6),
         "support": round(support, 5),
         "resistance": round(resistance, 5),
+        "atr14": round(atr, 5) if atr is not None else None,
         "last_bar_time": last_ts.strftime("%Y-%m-%d %H:%M UTC"),
         "data_age_minutes": round(data_age_minutes, 1),
         "bias": bias,

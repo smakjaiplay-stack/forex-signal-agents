@@ -49,7 +49,8 @@ def build_signal_block(signal: dict) -> list:
             f"TP1: {signal.get('take_profit_1')}  |  TP2: {signal.get('take_profit_2')}"
             f"  |  TP3: {signal.get('take_profit_3')}"
         )
-        lines.append(f"SL: {signal.get('stop_loss')}")
+        rr = signal.get("risk_reward")
+        lines.append(f"SL: {signal.get('stop_loss')}" + (f"  |  R:R {rr}" if rr else ""))
 
     lines.append(f"Support: {signal.get('support')} | Resistance: {signal.get('resistance')}")
 
