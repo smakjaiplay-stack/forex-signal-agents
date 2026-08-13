@@ -9,6 +9,7 @@ can consume.
 Usage:
     python agent2_technical_analyzer.py
     python agent2_technical_analyzer.py --pairs EURUSD GBPUSD --interval 1h --period 5d
+    python agent2_technical_analyzer.py --interval 5m --period 5d   # fastest reaction
 
 Output:
     Prints JSON to stdout, and writes to technical_analysis.json
@@ -89,6 +90,13 @@ def analyze_pair(symbol: str, interval: str, period: str) -> dict:
     resistance = float(recent.max())
     support = float(recent.min())
 
+    # How old is the candle we're pricing off? Yahoo's intraday feed lags,
+    # and the last bar is still forming, so the entry price can be minutes
+    # behind the market — report it instead of letting it hide.
+    last_ts = pd.Timestamp(close.index[-1])
+    last_ts = last_ts.tz_localize("UTC") if last_ts.tzinfo is None else last_ts.tz_convert("UTC")
+    data_age_minutes = (pd.Timestamp.now(tz="UTC") - last_ts).total_seconds() / 60
+
     # --- Bias scoring (simple rule-based, -3 to +3) ---
     score = 0
     reasons = []
@@ -135,6 +143,8 @@ def analyze_pair(symbol: str, interval: str, period: str) -> dict:
         "macd_histogram": round(last_hist, 6),
         "support": round(support, 5),
         "resistance": round(resistance, 5),
+        "last_bar_time": last_ts.strftime("%Y-%m-%d %H:%M UTC"),
+        "data_age_minutes": round(data_age_minutes, 1),
         "bias": bias,
         "score": score,
         "reasons": reasons,
@@ -145,8 +155,11 @@ def main():
     parser = argparse.ArgumentParser(description="Agent 2 - Technical Analyzer")
     parser.add_argument("--pairs", nargs="*", default=list(DEFAULT_PAIRS.keys()),
                          help="Currency pairs to analyze, e.g. EURUSD GBPUSD")
-    parser.add_argument("--interval", default="1h", help="Candle interval (e.g. 15m, 1h, 4h, 1d)")
-    parser.add_argument("--period", default="5d", help="How much history to pull (e.g. 5d, 1mo)")
+    # 15m by default: an hourly candle means the entry price can be up to an
+    # hour stale by the time the signal reaches LINE. Yahoo serves 15m bars
+    # for up to 60d, so 10d leaves plenty of room above the 50-bar minimum.
+    parser.add_argument("--interval", default="15m", help="Candle interval (e.g. 15m, 1h, 4h, 1d)")
+    parser.add_argument("--period", default="10d", help="How much history to pull (e.g. 5d, 1mo)")
     parser.add_argument("--out", default="technical_analysis.json", help="Output JSON file path")
     args = parser.parse_args()
 

@@ -1,16 +1,15 @@
 """
 Agent 5 - Price Watcher
 =========================
-Watches the currently open trade in open_trade.json (written once a day by
-Agent 3) against live intraday price data, applies the same TP1/TP2/TP3
-trailing stop-loss rule that backtest.py simulates (breakeven after TP1,
-TP1-level after TP2, close at TP3), and sends a LINE alert plus updates
-open_trade.json whenever a level is crossed.
+Watches every open trade in open_trade.json (written by Agent 3, which can
+publish several pairs per run) against live intraday price data, applies the
+same TP1/TP2/TP3 trailing stop-loss rule that backtest.py simulates
+(breakeven after TP1, TP1-level after TP2, close at TP3), and sends a LINE
+alert plus updates open_trade.json whenever a level is crossed.
 
-Unlike Agent 1-4 (run once a day at market open), this is meant to run
-frequently - every ~15-30 min during forex trading hours - via its own
-schedule, so a trade actually gets watched between the daily runs instead
-of only being evaluated once when it's already stale.
+This runs far more often than the signal pipeline - every 15 min during
+forex trading hours - so a trade actually gets watched between pipeline
+runs instead of only being evaluated once when it's already stale.
 
 Each time a trade closes (TP3, SL, or a ~24h timeout - matching the daily
 reset the live system already does), the outcome is appended to
@@ -164,6 +163,19 @@ def watch(open_trade: dict, token: str, dry_run: bool, trades_log_path: str):
     return open_trade
 
 
+def load_open_trades(path):
+    """Agent 3 writes a list of trades now (it can publish several pairs per
+    run). Older state files hold a single dict — accept both."""
+    data = load_json(path)
+    if data is None:
+        return None
+    if isinstance(data, dict):
+        data = [data]
+    if not isinstance(data, list):
+        return None
+    return [t for t in data if isinstance(t, dict)]
+
+
 def main():
     parser = argparse.ArgumentParser(description="Agent 5 - Price Watcher (TP1/TP2/TP3 trailing SL)")
     parser.add_argument("--open-trade", default="open_trade.json", help="Path to Agent 3's open-trade state")
@@ -171,24 +183,31 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Print alerts instead of sending to LINE")
     args = parser.parse_args()
 
-    open_trade = load_json(args.open_trade)
-    if not open_trade:
+    trades = load_open_trades(args.open_trade)
+    if not trades:
         print(f"[info] no {args.open_trade} found - nothing to watch.")
         return
-    if open_trade.get("closed") or open_trade.get("action") not in ("Buy", "Sell"):
+
+    watchable = [t for t in trades if not t.get("closed") and t.get("action") in ("Buy", "Sell")]
+    if not watchable:
         print("[info] no open Buy/Sell trade to watch right now.")
         return
 
     token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
-    updated = watch(open_trade, token, args.dry_run, args.trades_log)
+    still_open = []
+    for trade in watchable:
+        updated = watch(trade, token, args.dry_run, args.trades_log)
+        if updated.get("closed"):
+            print(f"[ok] {updated['pair']} closed: {updated['outcome']} ({updated['r_multiple']:+.2f}R)")
+        else:
+            print(f"[ok] {updated['pair']} still open, current_sl={updated['current_sl']}, "
+                  f"alerts={updated['alerts_sent']}")
+            still_open.append(updated)
 
+    # Closed trades are already in trades_log.jsonl, so they're dropped here
+    # rather than re-scanned on every future run.
     with open(args.open_trade, "w", encoding="utf-8") as f:
-        json.dump(updated, f, ensure_ascii=False, indent=2)
-
-    if updated["closed"]:
-        print(f"[ok] trade closed: {updated['outcome']} ({updated['r_multiple']:+.2f}R)")
-    else:
-        print(f"[ok] trade still open, current_sl={updated['current_sl']}, alerts={updated['alerts_sent']}")
+        json.dump(still_open, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":

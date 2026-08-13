@@ -2,12 +2,12 @@
 Agent 3 - Signal Synthesizer (Rule-Based, No AI API required)
 ================================================================
 Reads Agent 1's news_summary.json and Agent 2's technical_analysis.json,
-combines them with simple rules, and picks the single most probable
-currency pair signal for the day. Writes signal.json for Agent 4 (LINE
-Notifier) to consume.
+combines them with simple rules, and picks the strongest N currency pair
+signals. Writes signal.json for Agent 4 (LINE Notifier) to consume.
 
 Usage:
     python agent3_signal_synthesizer.py
+    python agent3_signal_synthesizer.py --top 3 --max-open 3
     python agent3_signal_synthesizer.py --news news_summary.json --technical technical_analysis.json
 
 Logic (rule-based):
@@ -17,17 +17,29 @@ Logic (rule-based):
        hasn't been released yet today ("actual" is null), treat the
        pair as risky (confidence downgraded / flagged) because price
        can whipsaw around the release.
-    3. Pick the pair with the strongest |score| among the non-risky
-       (or least-risky) candidates as the final signal.
-    4. Turn the bias into a trade card: Action (Buy/Sell/Wait),
-       Possibility %, Take Profit 1-3, Stop Loss, Status, Time frame —
+    3. Rank all pairs by |score| and keep the top N non-risky candidates
+       (falling back to the single best overall if nothing qualifies).
+    4. Turn each bias into a trade card: Action (Buy/Sell/Wait),
+       Possibility %, Take Profit 1-3, Stop Loss, Status, Time frame -
        styled like a typical "forex signal" app card.
+
+Because the pipeline now runs several times a day (not once at market open),
+open_trade.json is *merged*, not overwritten: trades Agent 5 is still
+watching are kept, and only pairs that aren't already open - and aren't in
+the post-close cooldown window - get added. Each signal is flagged "new"
+so Agent 4 only notifies about signals you haven't been told about yet.
 """
 
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+DEFAULT_TOP_N = 3
+DEFAULT_MAX_OPEN = 3
+DEFAULT_COOLDOWN_HOURS = 6
+DEFAULT_MIN_SCORE = 2
+
 
 # Currency -> which side of the pair it is doesn't matter for this rule;
 # we just check if either currency in the pair has a pending high-impact event.
@@ -113,7 +125,55 @@ def build_trade_levels(action: str, entry: float, support: float, resistance: fl
     }
 
 
-def synthesize(news_data, tech_data):
+def build_signal(candidate, time_frame):
+    """Turn one ranked candidate into a full trade card."""
+    if candidate["abs_score"] < 2:
+        confidence = "low"
+    elif candidate["abs_score"] == 2:
+        confidence = "medium"
+    else:
+        confidence = "high"
+
+    if candidate["risky_pending_news"]:
+        confidence = "low"
+
+    action = {"bullish": "Buy", "bearish": "Sell", "neutral": "Wait"}[candidate["bias"]]
+    ndigits = decimals_for_pair(candidate["pair"])
+    levels = build_trade_levels(
+        action, candidate["last_close"], candidate["support"], candidate["resistance"], ndigits
+    )
+    now_utc = datetime.now(timezone.utc)
+
+    signal = {
+        "pair": candidate["pair"],
+        "action": action,
+        "direction": candidate["bias"],
+        "confidence": confidence,
+        "possibility_percent": possibility_percent(candidate["abs_score"], candidate["risky_pending_news"]),
+        "score": candidate["score"],
+        "status": "Active" if action != "Wait" else "No Trade",
+        "opening_time": now_utc.strftime("%Y-%m-%d %H:%M UTC"),
+        "last_update": now_utc.strftime("%Y-%m-%d %H:%M UTC"),
+        "open_price": round(candidate["last_close"], ndigits),
+        "time_frame": time_frame,
+        # How stale the candle behind open_price is, so the LINE card can say
+        # "priced off a 15m bar that closed 4 min ago" instead of hiding it.
+        "last_bar_time": candidate.get("last_bar_time"),
+        "data_age_minutes": candidate.get("data_age_minutes"),
+        "profit_loss": "Waiting",
+        "trade_result": "Waiting",
+        "support": round(candidate["support"], ndigits),
+        "resistance": round(candidate["resistance"], ndigits),
+        "reasons": candidate["reasons"],
+        "pending_high_impact_news": candidate["risky_pending_news"],
+        "comment": "High-impact news pending — expect volatility" if candidate["risky_pending_news"] else "-",
+    }
+    if levels:
+        signal.update(levels)
+    return signal
+
+
+def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_SCORE):
     pending_currencies = pending_high_impact_currencies(news_data)
     time_frame = tech_data.get("interval", "?")
 
@@ -135,10 +195,13 @@ def synthesize(news_data, tech_data):
             "last_close": result["last_close"],
             "support": result["support"],
             "resistance": result["resistance"],
+            "last_bar_time": result.get("last_bar_time"),
+            "data_age_minutes": result.get("data_age_minutes"),
         })
 
     if not candidates:
         return {
+            "signals": [],
             "signal": None,
             "note": "No valid technical results to synthesize a signal from.",
         }
@@ -149,49 +212,86 @@ def synthesize(news_data, tech_data):
     pool = non_risky if non_risky else candidates
     pool_sorted = sorted(pool, key=lambda c: c["abs_score"], reverse=True)
 
-    best = pool_sorted[0]
+    # Everything that clears the bar, not just the single best — the whole
+    # point of top-N is that you get more than one option per run.
+    tradable = [c for c in pool_sorted if c["bias"] != "neutral" and c["abs_score"] >= min_score]
+    chosen = tradable[:top_n] if tradable else pool_sorted[:1]
 
-    if best["abs_score"] < 2:
-        confidence = "low"
-    elif best["abs_score"] == 2:
-        confidence = "medium"
-    else:
-        confidence = "high"
-
-    if best["risky_pending_news"]:
-        confidence = "low"
-
-    action = {"bullish": "Buy", "bearish": "Sell", "neutral": "Wait"}[best["bias"]]
-    ndigits = decimals_for_pair(best["pair"])
-    levels = build_trade_levels(action, best["last_close"], best["support"], best["resistance"], ndigits)
-    now_utc = datetime.now(timezone.utc)
-
-    signal = {
-        "pair": best["pair"],
-        "action": action,
-        "direction": best["bias"],
-        "confidence": confidence,
-        "possibility_percent": possibility_percent(best["abs_score"], best["risky_pending_news"]),
-        "score": best["score"],
-        "status": "Active" if action != "Wait" else "No Trade",
-        "opening_time": now_utc.strftime("%Y-%m-%d %H:%M UTC"),
-        "last_update": now_utc.strftime("%Y-%m-%d %H:%M UTC"),
-        "open_price": round(best["last_close"], ndigits),
-        "time_frame": time_frame,
-        "profit_loss": "Waiting",
-        "trade_result": "Waiting",
-        "support": round(best["support"], ndigits),
-        "resistance": round(best["resistance"], ndigits),
-        "reasons": best["reasons"],
-        "pending_high_impact_news": best["risky_pending_news"],
-        "comment": "High-impact news pending — expect volatility" if best["risky_pending_news"] else "-",
-    }
-    if levels:
-        signal.update(levels)
+    signals = [build_signal(c, time_frame) for c in chosen]
 
     return {
-        "signal": signal,
+        "signals": signals,
+        # Kept so anything still reading the old single-signal shape works.
+        "signal": signals[0] if signals else None,
         "all_candidates": sorted(candidates, key=lambda c: c["abs_score"], reverse=True),
+    }
+
+
+def load_open_trades(path):
+    """Read open_trade.json, tolerating both the legacy single-dict format
+    and the current list-of-trades format. Closed / non-trade entries are
+    dropped — Agent 5 has already logged those to trades_log.jsonl."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return []
+
+    if isinstance(data, dict):
+        data = [data]
+    if not isinstance(data, list):
+        return []
+
+    return [
+        t for t in data
+        if isinstance(t, dict) and t.get("action") in ("Buy", "Sell") and not t.get("closed")
+    ]
+
+
+def pairs_in_cooldown(trades_log_path, cooldown_hours):
+    """Pairs whose trade closed within the last `cooldown_hours`.
+
+    Without this, a pair that just stopped out gets re-entered on the very
+    next pipeline run (4h later the indicators usually still look the same),
+    which turns one bad read into a string of them."""
+    if cooldown_hours <= 0:
+        return set()
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=cooldown_hours)
+    cooling = set()
+    try:
+        with open(trades_log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                    closed_at = datetime.fromisoformat(str(rec["closed_at"]).replace("Z", "+00:00"))
+                except Exception:
+                    continue
+                if closed_at.tzinfo is None:
+                    closed_at = closed_at.replace(tzinfo=timezone.utc)
+                if closed_at >= cutoff and rec.get("pair"):
+                    cooling.add(rec["pair"])
+    except FileNotFoundError:
+        return set()
+    return cooling
+
+
+def make_open_trade(signal, opened_at):
+    return {
+        "pair": signal["pair"],
+        "action": signal["action"],
+        "entry_price": signal["open_price"],
+        "take_profit_1": signal["take_profit_1"],
+        "take_profit_2": signal["take_profit_2"],
+        "take_profit_3": signal["take_profit_3"],
+        "stop_loss": signal["stop_loss"],
+        "current_sl": signal["stop_loss"],
+        "opened_at": opened_at,
+        "closed": False,
+        "alerts_sent": {"tp1": False, "tp2": False, "tp3": False, "sl": False},
     }
 
 
@@ -201,7 +301,17 @@ def main():
     parser.add_argument("--technical", default="technical_analysis.json", help="Path to Agent 2 output")
     parser.add_argument("--out", default="signal.json", help="Output JSON file path")
     parser.add_argument("--open-trade-out", default="open_trade.json",
-                         help="Where to (re)write today's open-trade state for Agent 5")
+                         help="Open-trade state file for Agent 5 (merged, not overwritten)")
+    parser.add_argument("--trades-log", default="trades_log.jsonl",
+                         help="Closed-trade log, used for the re-entry cooldown check")
+    parser.add_argument("--top", type=int, default=DEFAULT_TOP_N,
+                         help="How many signals to publish per run")
+    parser.add_argument("--max-open", type=int, default=DEFAULT_MAX_OPEN,
+                         help="Cap on simultaneously open trades across all runs")
+    parser.add_argument("--min-score", type=int, default=DEFAULT_MIN_SCORE,
+                         help="Minimum |technical score| for a pair to be publishable")
+    parser.add_argument("--cooldown-hours", type=float, default=DEFAULT_COOLDOWN_HOURS,
+                         help="Don't re-enter a pair this soon after its last trade closed (0 disables)")
     args = parser.parse_args()
 
     news_data = load_json(args.news)
@@ -211,9 +321,35 @@ def main():
         print("[error] technical analysis data is required to synthesize a signal", file=sys.stderr)
         sys.exit(1)
 
-    result = synthesize(news_data, tech_data)
+    result = synthesize(news_data, tech_data, top_n=args.top, min_score=args.min_score)
+    generated_at = datetime.now(timezone.utc).isoformat()
+
+    # Decide which signals are actually new *before* writing signal.json, so
+    # Agent 4 can notify about those and stay quiet about the rest.
+    open_trades = load_open_trades(args.open_trade_out)
+    open_pairs = {t["pair"] for t in open_trades}
+    cooling = pairs_in_cooldown(args.trades_log, args.cooldown_hours)
+
+    new_trades = []
+    for signal in result.get("signals", []):
+        if signal["action"] not in ("Buy", "Sell"):
+            signal["new"] = False
+            signal["skip_reason"] = "no trade (neutral bias)"
+        elif signal["pair"] in open_pairs:
+            signal["new"] = False
+            signal["skip_reason"] = "already open — Agent 5 is watching it"
+        elif signal["pair"] in cooling:
+            signal["new"] = False
+            signal["skip_reason"] = f"cooldown ({args.cooldown_hours}h since last close)"
+        elif len(open_trades) + len(new_trades) >= args.max_open:
+            signal["new"] = False
+            signal["skip_reason"] = f"max open trades reached ({args.max_open})"
+        else:
+            signal["new"] = True
+            new_trades.append(make_open_trade(signal, generated_at))
+
     output = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": generated_at,
         **result,
     }
 
@@ -222,34 +358,15 @@ def main():
 
     print(json.dumps(output, ensure_ascii=False, indent=2))
 
-    # Reset the open-trade state for Agent 5 (Price Watcher) whenever a
-    # fresh daily signal is produced. This overwrites any leftover state
-    # from the previous day so alerts/trailing-SL start clean.
-    signal = output.get("signal")
-    if signal and signal.get("action") in ("Buy", "Sell"):
-        open_trade = {
-            "pair": signal["pair"],
-            "action": signal["action"],
-            "entry_price": signal["open_price"],
-            "take_profit_1": signal["take_profit_1"],
-            "take_profit_2": signal["take_profit_2"],
-            "take_profit_3": signal["take_profit_3"],
-            "stop_loss": signal["stop_loss"],
-            "current_sl": signal["stop_loss"],
-            "opened_at": output["generated_at"],
-            "closed": False,
-            "alerts_sent": {"tp1": False, "tp2": False, "tp3": False, "sl": False},
-        }
-    else:
-        open_trade = {
-            "pair": signal["pair"] if signal else None,
-            "action": "Wait",
-            "closed": True,
-            "opened_at": output["generated_at"],
-        }
-
     with open(args.open_trade_out, "w", encoding="utf-8") as f:
-        json.dump(open_trade, f, ensure_ascii=False, indent=2)
+        json.dump(open_trades + new_trades, f, ensure_ascii=False, indent=2)
+
+    print(
+        f"[ok] {len(result.get('signals', []))} signal(s) published, "
+        f"{len(new_trades)} new trade(s) opened, "
+        f"{len(open_trades) + len(new_trades)} now being watched.",
+        file=sys.stderr,
+    )
 
 
 if __name__ == "__main__":

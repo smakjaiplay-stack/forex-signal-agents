@@ -28,11 +28,8 @@ import requests
 LINE_BROADCAST_URL = "https://api.line.me/v2/bot/message/broadcast"
 
 
-def build_message_text(signal_data: dict) -> str:
-    signal = signal_data.get("signal")
-    if not signal:
-        return "⚠️ Forex Signal Bot: no valid signal today.\n" + str(signal_data.get("note", ""))
-
+def build_signal_block(signal: dict) -> list:
+    """One trade card, as a list of lines."""
     direction_emoji = {"bullish": "🟢 BUY", "bearish": "🔴 SELL", "neutral": "⚪ NEUTRAL"}
     direction_label = direction_emoji.get(signal.get("direction"), str(signal.get("direction")).upper())
 
@@ -40,7 +37,7 @@ def build_message_text(signal_data: dict) -> str:
     conf_label = confidence_emoji.get(signal.get("confidence"), "")
 
     lines = [
-        f"📊 Forex Signal — {signal['pair']}",
+        f"📊 {signal['pair']}",
         f"{direction_label}  |  Confidence: {signal.get('confidence')} {conf_label}"
         f"  |  Possibility: {signal.get('possibility_percent')}%",
         f"Status: {signal.get('status')}  |  Time frame: {signal.get('time_frame')}",
@@ -55,16 +52,47 @@ def build_message_text(signal_data: dict) -> str:
         lines.append(f"SL: {signal.get('stop_loss')}")
 
     lines.append(f"Support: {signal.get('support')} | Resistance: {signal.get('resistance')}")
-    lines.append("")
-    lines.append("Reasons:")
+
+    # Say how stale the entry price is, so a delayed run is obvious at a glance
+    # instead of looking like a live quote.
+    age = signal.get("data_age_minutes")
+    if age is not None:
+        lines.append(f"🕒 Price from {signal.get('last_bar_time')} ({age:.0f} min ago)")
+
     for reason in signal.get("reasons", []):
         lines.append(f"• {reason}")
 
     if signal.get("pending_high_impact_news"):
-        lines.append("")
-        lines.append("⚠️ High-impact news pending today for this pair's currency — expect volatility.")
+        lines.append("⚠️ High-impact news pending for this pair — expect volatility.")
 
-    return "\n".join(lines)
+    return lines
+
+
+def select_signals(signal_data: dict, send_all: bool) -> list:
+    """Signals worth sending this run.
+
+    The pipeline runs several times a day now, so by default only signals
+    Agent 3 flagged as new go out — otherwise the same trade would be
+    broadcast again on every run until it closes."""
+    signals = signal_data.get("signals")
+    if signals is None:
+        # Legacy single-signal signal.json
+        signals = [signal_data["signal"]] if signal_data.get("signal") else []
+    if send_all:
+        return signals
+    return [s for s in signals if s.get("new")]
+
+
+def build_message_text(signal_data: dict, signals: list) -> str:
+    if not signals:
+        return "⚠️ Forex Signal Bot: no valid signal right now.\n" + str(signal_data.get("note", ""))
+
+    header = "📊 Forex Signals" if len(signals) > 1 else "📊 Forex Signal"
+    blocks = [f"{header} ({len(signals)})"]
+    for signal in signals:
+        blocks.append("─────────────")
+        blocks.extend(build_signal_block(signal))
+    return "\n".join(blocks)
 
 
 def send_broadcast(token: str, text: str):
@@ -85,6 +113,8 @@ def main():
     parser = argparse.ArgumentParser(description="Agent 4 - LINE Notifier")
     parser.add_argument("--signal", default="signal.json", help="Path to Agent 3 output")
     parser.add_argument("--dry-run", action="store_true", help="Print the message instead of sending to LINE")
+    parser.add_argument("--all", action="store_true",
+                         help="Send every published signal, not just the ones flagged new")
     args = parser.parse_args()
 
     token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
@@ -101,7 +131,14 @@ def main():
         print(f"[error] could not read {args.signal}: {e}", file=sys.stderr)
         sys.exit(1)
 
-    message_text = build_message_text(signal_data)
+    signals = select_signals(signal_data, args.all)
+    if not signals and signal_data.get("signals"):
+        print("[info] no new signals this run — nothing to send.")
+        for skipped in signal_data["signals"]:
+            print(f"       {skipped['pair']}: {skipped.get('skip_reason', 'not new')}")
+        return
+
+    message_text = build_message_text(signal_data, signals)
     print("--- Message to send ---")
     print(message_text)
     print("-----------------------")
