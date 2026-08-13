@@ -2,13 +2,22 @@ name: Forex Signal Pipeline
 
 on:
   schedule:
-    # 00:00 UTC = 07:00 Bangkok time, Monday-Friday (forex trading days)
-    # Adjust the cron expression below if you want a different time.
-    - cron: "0 0 * * 1-5"
+    # Every 4 hours on forex trading days, at :07 past the hour.
+    # 00:07 / 04:07 / 08:07 / 12:07 / 16:07 / 20:07 UTC
+    #  = 07:07 / 11:07 / 15:07 / 19:07 / 23:07 / 03:07 Bangkok time.
+    # Why :07 and not :00 — GitHub queues every "0 * * * *" job in the world
+    # at the same instant, so top-of-hour runs routinely start 5-20 min late.
+    # An odd minute usually starts within a minute or two.
+    - cron: "7 */4 * * 1-5"
   workflow_dispatch: {}   # lets you manually trigger a run from the Actions tab
 
 permissions:
   contents: write   # needed so the "commit today's signal" step can push
+
+concurrency:
+  # Never let two pipeline runs race each other onto the same branch.
+  group: forex-signal
+  cancel-in-progress: false
 
 jobs:
   run-pipeline:
@@ -21,6 +30,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip   # shaves ~30s off every run (and off the minutes bill)
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -35,5 +45,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add news_summary.json technical_analysis.json signal.json open_trade.json
-          git diff --cached --quiet || git commit -m "Daily signal: $(date -u +%Y-%m-%d) [skip ci]"
-          git push
+          git diff --cached --quiet && exit 0
+          git commit -m "Signal update: $(date -u +'%Y-%m-%d %H:%M') UTC [skip ci]"
+          # The price watcher pushes to this branch every 15 min, so rebase
+          # onto whatever it committed while this run was working.
+          for i in 1 2 3; do
+            git pull --rebase --autostash && git push && exit 0
+            echo "push attempt $i failed, retrying..."
+            sleep 5
+          done
+          exit 1

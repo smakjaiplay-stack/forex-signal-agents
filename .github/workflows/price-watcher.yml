@@ -1,14 +1,21 @@
-name: Price Watcher (Hourly)
+name: Price Watcher (Every 15 min)
 
 on:
   schedule:
-    # Every hour, all days (forex trades ~24/5) — safest option for GitHub
-    # Actions minutes and Yahoo Finance rate limits.
-    - cron: "0 * * * *"
+    # Every 15 min during forex trading days, on odd minutes to dodge the
+    # top-of-hour queue on GitHub's shared scheduler.
+    - cron: "4,19,34,49 * * * 1-5"
+    # Sunday 21:00-23:59 UTC — the Asia open, before Monday UTC starts.
+    - cron: "4,19,34,49 21-23 * * 0"
   workflow_dispatch: {}
 
 permissions:
   contents: write   # needed to commit the updated open_trade.json back to the repo
+
+concurrency:
+  # A delayed run must not overlap the next one — both write open_trade.json.
+  group: price-watcher
+  cancel-in-progress: false
 
 jobs:
   watch-price:
@@ -21,6 +28,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip   # this job runs ~96x/day — the cache matters for the minutes bill
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -34,11 +42,18 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [ -f open_trade.json ]; then
-            git add open_trade.json
-            [ -f trades_log.jsonl ] && git add trades_log.jsonl
-            git diff --staged --quiet || git commit -m "Update open_trade.json [skip ci]"
-            git push
-          else
+          if [ ! -f open_trade.json ]; then
             echo "open_trade.json not found; nothing to commit."
+            exit 0
           fi
+          git add open_trade.json
+          [ -f trades_log.jsonl ] && git add trades_log.jsonl
+          git diff --staged --quiet && exit 0
+          git commit -m "Update trade state [skip ci]"
+          # The signal pipeline pushes to this branch too — rebase, don't fail.
+          for i in 1 2 3; do
+            git pull --rebase --autostash && git push && exit 0
+            echo "push attempt $i failed, retrying..."
+            sleep 5
+          done
+          exit 1
