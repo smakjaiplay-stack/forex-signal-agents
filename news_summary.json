@@ -1,63 +1,75 @@
 {
-  "generated_at": "2026-08-13T02:32:17.123496+00:00",
+  "generated_at": "2026-08-14T02:31:18.232016+00:00",
   "calendar_events_today": [
     {
-      "time": "2026-08-13T02:00:00-04:00",
-      "currency": "GBP",
-      "title": "GDP m/m",
-      "impact": "High",
-      "forecast": "0.0%",
-      "previous": "0.1%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-13T02:00:00-04:00",
-      "currency": "GBP",
-      "title": "Prelim GDP q/q",
-      "impact": "Medium",
-      "forecast": "0.4%",
-      "previous": "0.6%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-13T08:30:00-04:00",
+      "time": "2026-08-14T08:30:00-04:00",
       "currency": "USD",
-      "title": "Core PPI m/m",
-      "impact": "High",
-      "forecast": "0.3%",
+      "title": "Core Retail Sales m/m",
+      "impact": "Medium",
+      "forecast": "0.2%",
+      "previous": "-0.2%",
+      "actual": null
+    },
+    {
+      "time": "2026-08-14T08:30:00-04:00",
+      "currency": "USD",
+      "title": "Retail Sales m/m",
+      "impact": "Medium",
+      "forecast": "0.1%",
       "previous": "0.2%",
       "actual": null
     },
     {
-      "time": "2026-08-13T08:30:00-04:00",
+      "time": "2026-08-14T10:00:00-04:00",
       "currency": "USD",
-      "title": "PPI m/m",
-      "impact": "High",
-      "forecast": "0.2%",
-      "previous": "-0.3%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-13T08:30:00-04:00",
-      "currency": "USD",
-      "title": "Unemployment Claims",
+      "title": "Prelim UoM Consumer Sentiment",
       "impact": "Medium",
-      "forecast": "202K",
-      "previous": "199K",
+      "forecast": "54.7",
+      "previous": "54.4",
       "actual": null
     },
     {
-      "time": "2026-08-13T19:30:00-04:00",
-      "currency": "AUD",
-      "title": "RBA Gov Bullock Speaks",
+      "time": "2026-08-14T10:00:00-04:00",
+      "currency": "USD",
+      "title": "Prelim UoM Inflation Expectations",
       "impact": "Medium",
       "forecast": "",
-      "previous": "",
+      "previous": "4.2%",
       "actual": null
     }
   ],
   "calendar_error": null,
   "news_headlines": [
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Dollar falls as traders reduce Fed rate hike bets; sterling slips after GDP data",
+      "published": "2026-08-13 19:44:38",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-dollar-steady-as-traders-weigh-fed-outlook-after-inline-us-cpi-4856590"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Argentina to ease dollar lending rules for banks",
+      "published": "2026-08-13 19:18:05",
+      "link": "https://www.investing.com/news/forex-news/argentina-to-ease-dollar-lending-rules-for-banks-93CH-4858993"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Rand holds near five-month high despite mining output drop",
+      "published": "2026-08-13 13:22:56",
+      "link": "https://www.investing.com/news/forex-news/rand-holds-near-fivemonth-high-despite-mining-output-drop-93CH-4858138"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "U.S. Treasuries steady after softer monthly PPI",
+      "published": "2026-08-13 12:37:22",
+      "link": "https://www.investing.com/news/forex-news/european-bonds-flat-as-traders-digest-mixed-data-slate-and-inline-us-inflation-4856675"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Sterling today: Pound dips as dollar bulls rebuild after CPI",
+      "published": "2026-08-13 10:03:24",
+      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-dips-as-dollar-bulls-rebuild-after-cpi-4857117"
+    },
     {
       "source": "Investing.com - Forex News",
       "title": "Dollar erases CPI data-sparked losses, inches up amid Hormuz uncertainty",
@@ -77,82 +89,52 @@
       "link": "https://www.investing.com/news/forex-news/german-yields-hover-oneweek-highs-as-oil-spikes-for-sixth-day-us-cpi-in-focus-4853748"
     },
     {
-      "source": "Investing.com - Forex News",
-      "title": "Dollar flat a day ahead of key CPI data; yen gives up more intervention gains",
-      "published": "2026-08-11 20:34:05",
-      "link": "https://www.investing.com/news/forex-news/asia-fx-dollar-muted-with-us-cpi-on-tap-rba-holds-rates-4850775"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "USD/JPY and the dollar at a crossroads after intervention and rate shifts",
-      "published": "2026-08-11 17:35:35",
-      "link": "https://www.investing.com/news/forex-news/usdjpy-and-the-dollar-at-a-crossroads-after-intervention-and-rate-shifts-93CH-4852378"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "South African rand holds firm despite job and factory data",
-      "published": "2026-08-11 15:18:30",
-      "link": "https://www.investing.com/news/forex-news/south-african-rand-holds-firm-despite-job-and-factory-data-93CH-4852218"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Treasuries extend losses as 10-Year yield nears highest level since January 2025",
-      "published": "2026-08-11 12:41:34",
-      "link": "https://www.investing.com/news/forex-news/german-yields-rebound-to-highest-since-aug-3-as-energy-spike-stokes-fear-4850909"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Yen trades near 160 per dollar as intervention impact fades",
-      "published": "2026-08-11 12:35:14",
-      "link": "https://www.investing.com/news/forex-news/yen-trades-near-160-per-dollar-as-intervention-impact-fades-93CH-4851599"
+      "source": "FXStreet - News",
+      "title": "Latvia issues air threat alert, Finland restricts air and sea traffic",
+      "published": "Fri, 14 Aug 2026 02:07:32 GMT",
+      "link": "https://www.fxstreet.com/news/latvia-issues-air-threat-alert-finland-restricts-air-and-sea-traffic-202608140207"
     },
     {
       "source": "FXStreet - News",
-      "title": "0.7050: Australian Dollar stuck in a range as Iran risks offset hawkish RBA",
-      "published": "Thu, 13 Aug 2026 02:14:40 GMT",
-      "link": "https://www.fxstreet.com/news/07050-australian-dollar-stuck-in-a-range-as-iran-risks-offset-hawkish-rba-202608130214"
+      "title": "British Pound edges higher vs softer USD; lacks follow-through as geopolitics cap gains",
+      "published": "Fri, 14 Aug 2026 01:54:39 GMT",
+      "link": "https://www.fxstreet.com/news/british-pound-edges-higher-vs-softer-usd-lacks-follow-through-as-geopolitics-cap-gains-202608140154"
     },
     {
       "source": "FXStreet - News",
-      "title": "UK GDP expected to show moderate Q2 growth",
-      "published": "Thu, 13 Aug 2026 02:00:00 GMT",
-      "link": "https://www.fxstreet.com/news/uk-gdp-expected-to-show-moderate-q2-growth-202608130200"
+      "title": "Japanese Yen strengthens as soft US PPI tempers Fed outlook",
+      "published": "Fri, 14 Aug 2026 01:39:26 GMT",
+      "link": "https://www.fxstreet.com/news/japanese-yen-strengthens-as-soft-us-ppi-tempers-fed-outlook-202608140139"
     },
     {
       "source": "FXStreet - News",
-      "title": "Canadian Dollar steadies as weak US Dollar offsets lower oil prices",
-      "published": "Thu, 13 Aug 2026 01:46:06 GMT",
-      "link": "https://www.fxstreet.com/news/canadian-dollar-steadies-as-weak-us-dollar-offsets-lower-oil-prices-202608130146"
+      "title": "Australian Dollar declines despite RBA rate hike warning",
+      "published": "Fri, 14 Aug 2026 01:23:11 GMT",
+      "link": "https://www.fxstreet.com/news/australian-dollar-declines-despite-rba-rate-hike-warning-202608140123"
     },
     {
       "source": "FXStreet - News",
-      "title": "British Pound posts modest gains to near 1.3500 ahead of UK GDP data",
-      "published": "Thu, 13 Aug 2026 01:44:52 GMT",
-      "link": "https://www.fxstreet.com/news/british-pound-posts-modest-gains-to-near-13500-ahead-of-uk-gdp-data-202608130144"
+      "title": "New Zealand Dollar recovers from two-week low as fading Fed hike bets undermine USD",
+      "published": "Fri, 14 Aug 2026 01:19:41 GMT",
+      "link": "https://www.fxstreet.com/news/new-zealand-dollar-recovers-from-two-week-low-as-fading-fed-hike-bets-undermine-usd-202608140119"
     },
     {
       "source": "FXStreet - News",
-      "title": "United States Dollar Index stalls post-CPI bounce near 100.00 on receding Fed hike bets",
-      "published": "Thu, 13 Aug 2026 01:16:11 GMT",
-      "link": "https://www.fxstreet.com/news/united-states-dollar-index-stalls-post-cpi-bounce-near-10000-on-receding-fed-hike-bets-202608130116"
+      "title": "PBOC sets USD/CNY reference rate at 6.7878 vs. 6.7888 previous",
+      "published": "Fri, 14 Aug 2026 01:15:41 GMT",
+      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67878-vs-67888-previous-202608140115"
     },
     {
       "source": "FXStreet - News",
-      "title": "PBOC sets USD/CNY reference rate at 6.7888 vs. 6.7882 previous",
-      "published": "Thu, 13 Aug 2026 01:15:36 GMT",
-      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67888-vs-67882-previous-202608130115"
+      "title": "WTI remains below $80.50 as traders monitor diplomatic efforts to reopen Hormuz",
+      "published": "Fri, 14 Aug 2026 01:00:45 GMT",
+      "link": "https://www.fxstreet.com/news/wti-remains-below-8050-as-traders-monitor-diplomatic-efforts-to-reopen-hormuz-202608140100"
     },
     {
       "source": "FXStreet - News",
-      "title": "Euro advances as US Dollar weakens amid cooling Inflation",
-      "published": "Thu, 13 Aug 2026 01:01:37 GMT",
-      "link": "https://www.fxstreet.com/news/euro-advances-as-us-dollar-weakens-amid-cooling-us-inflation-202608130101"
-    },
-    {
-      "source": "FXStreet - News",
-      "title": "WTI declines below $82.50 as oil inventories rise far more than expected",
-      "published": "Thu, 13 Aug 2026 00:53:57 GMT",
-      "link": "https://www.fxstreet.com/news/wti-declines-below-8250-as-oil-inventories-rise-far-more-than-expected-202608130053"
+      "title": "Euro gathers strength above 1.1500 as cooling inflation data weighs on US Dollar",
+      "published": "Fri, 14 Aug 2026 00:43:01 GMT",
+      "link": "https://www.fxstreet.com/news/euro-gathers-strength-above-11500-as-cooling-inflation-data-weighs-on-us-dollar-202608140043"
     }
   ],
   "news_errors": []
