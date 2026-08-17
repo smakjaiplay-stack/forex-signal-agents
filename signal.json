@@ -1,90 +1,169 @@
 {
-  "generated_at": "2026-08-14T02:31:22.128105+00:00",
+  "generated_at": "2026-08-17T01:46:13.654103+00:00",
   "signals": [
     {
-      "pair": "EURUSD",
+      "pair": "AUDUSD",
       "action": "Buy",
       "direction": "bullish",
       "confidence": "medium",
       "possibility_percent": 70,
       "score": 2,
       "status": "Active",
-      "opening_time": "2026-08-14 02:31 UTC",
-      "last_update": "2026-08-14 02:31 UTC",
-      "open_price": 1.15393,
+      "opening_time": "2026-08-17 01:46 UTC",
+      "last_update": "2026-08-17 01:46 UTC",
+      "open_price": 0.70982,
       "time_frame": "15m",
-      "last_bar_time": "2026-08-14 02:30 UTC",
-      "data_age_minutes": 1.3,
+      "last_bar_time": "2026-08-17 01:45 UTC",
+      "data_age_minutes": 1.2,
       "profit_loss": "Waiting",
       "trade_result": "Waiting",
-      "support": 1.153,
-      "resistance": 1.15473,
+      "support": 0.70817,
+      "resistance": 0.70982,
       "reasons": [
         "EMA20 above EMA50 (short-term uptrend)",
-        "RSI 57.1 neutral",
+        "RSI 69.6 neutral",
         "MACD above signal line (bullish momentum)"
       ],
       "pending_high_impact_news": false,
       "comment": "-",
-      "take_profit_1": 1.1542,
-      "take_profit_2": 1.15446,
-      "take_profit_3": 1.15473,
-      "stop_loss": 1.15357,
-      "risk_reward": 2.22,
+      "take_profit_1": 0.71337,
+      "take_profit_2": 0.71692,
+      "take_profit_3": 0.72047,
+      "stop_loss": 0.70946,
+      "risk_reward": 29.58,
       "new": true
     }
   ],
   "signal": {
-    "pair": "EURUSD",
+    "pair": "AUDUSD",
     "action": "Buy",
     "direction": "bullish",
     "confidence": "medium",
     "possibility_percent": 70,
     "score": 2,
     "status": "Active",
-    "opening_time": "2026-08-14 02:31 UTC",
-    "last_update": "2026-08-14 02:31 UTC",
-    "open_price": 1.15393,
+    "opening_time": "2026-08-17 01:46 UTC",
+    "last_update": "2026-08-17 01:46 UTC",
+    "open_price": 0.70982,
     "time_frame": "15m",
-    "last_bar_time": "2026-08-14 02:30 UTC",
-    "data_age_minutes": 1.3,
+    "last_bar_time": "2026-08-17 01:45 UTC",
+    "data_age_minutes": 1.2,
     "profit_loss": "Waiting",
     "trade_result": "Waiting",
-    "support": 1.153,
-    "resistance": 1.15473,
+    "support": 0.70817,
+    "resistance": 0.70982,
     "reasons": [
       "EMA20 above EMA50 (short-term uptrend)",
-      "RSI 57.1 neutral",
+      "RSI 69.6 neutral",
       "MACD above signal line (bullish momentum)"
     ],
     "pending_high_impact_news": false,
     "comment": "-",
-    "take_profit_1": 1.1542,
-    "take_profit_2": 1.15446,
-    "take_profit_3": 1.15473,
-    "stop_loss": 1.15357,
-    "risk_reward": 2.22,
+    "take_profit_1": 0.71337,
+    "take_profit_2": 0.71692,
+    "take_profit_3": 0.72047,
+    "stop_loss": 0.70946,
+    "risk_reward": 29.58,
     "new": true
   },
-  "rejected_low_rr": [],
+  "rejected_low_rr": [
+    {
+      "pair": "XAUUSD",
+      "action": "Buy",
+      "risk_reward": 0.59,
+      "reason": "reward/risk 0.59 below minimum 1.5"
+    }
+  ],
   "all_candidates": [
     {
-      "pair": "EURUSD",
+      "pair": "AUDUSD",
       "bias": "bullish",
       "score": 2,
       "abs_score": 2,
       "risky_pending_news": false,
       "reasons": [
         "EMA20 above EMA50 (short-term uptrend)",
-        "RSI 57.1 neutral",
+        "RSI 69.6 neutral",
         "MACD above signal line (bullish momentum)"
       ],
-      "last_close": 1.15393,
-      "support": 1.153,
-      "resistance": 1.15473,
+      "last_close": 0.70982,
+      "support": 0.70817,
+      "resistance": 0.70982,
       "atr14": 0.00024,
-      "last_bar_time": "2026-08-14 02:30 UTC",
-      "data_age_minutes": 1.3
+      "last_bar_time": "2026-08-17 01:45 UTC",
+      "data_age_minutes": 1.2
+    },
+    {
+      "pair": "XAUUSD",
+      "bias": "bullish",
+      "score": 2,
+      "abs_score": 2,
+      "risky_pending_news": false,
+      "reasons": [
+        "EMA20 above EMA50 (short-term uptrend)",
+        "RSI 66.5 neutral",
+        "MACD above signal line (bullish momentum)"
+      ],
+      "last_close": 4458.7998,
+      "support": 4424.0,
+      "resistance": 4465.7998,
+      "atr14": 7.88658,
+      "last_bar_time": "2026-08-17 01:30 UTC",
+      "data_age_minutes": 16.2
+    },
+    {
+      "pair": "EURUSD",
+      "bias": "neutral",
+      "score": 1,
+      "abs_score": 1,
+      "risky_pending_news": false,
+      "reasons": [
+        "EMA20 above EMA50 (short-term uptrend)",
+        "RSI 85.7 overbought",
+        "MACD above signal line (bullish momentum)"
+      ],
+      "last_close": 1.15861,
+      "support": 1.1566,
+      "resistance": 1.15888,
+      "atr14": 0.00026,
+      "last_bar_time": "2026-08-17 01:45 UTC",
+      "data_age_minutes": 1.2
+    },
+    {
+      "pair": "GBPUSD",
+      "bias": "neutral",
+      "score": 1,
+      "abs_score": 1,
+      "risky_pending_news": false,
+      "reasons": [
+        "EMA20 above EMA50 (short-term uptrend)",
+        "RSI 87.6 overbought",
+        "MACD above signal line (bullish momentum)"
+      ],
+      "last_close": 1.35544,
+      "support": 1.35305,
+      "resistance": 1.35615,
+      "atr14": 0.00033,
+      "last_bar_time": "2026-08-17 01:45 UTC",
+      "data_age_minutes": 1.2
+    },
+    {
+      "pair": "USDJPY",
+      "bias": "neutral",
+      "score": -1,
+      "abs_score": 1,
+      "risky_pending_news": false,
+      "reasons": [
+        "EMA20 below EMA50 (short-term downtrend)",
+        "RSI 29.5 oversold",
+        "MACD below signal line (bearish momentum)"
+      ],
+      "last_close": 159.09,
+      "support": 158.799,
+      "resistance": 159.384,
+      "atr14": 0.07421,
+      "last_bar_time": "2026-08-17 01:45 UTC",
+      "data_age_minutes": 1.2
     },
     {
       "pair": "NZDUSD",
@@ -94,141 +173,69 @@
       "risky_pending_news": false,
       "reasons": [
         "EMA20 above EMA50 (short-term uptrend)",
-        "RSI 70.1 overbought",
+        "RSI 76.1 overbought",
         "MACD above signal line (bullish momentum)"
       ],
-      "last_close": 0.58624,
-      "support": 0.58469,
-      "resistance": 0.58624,
-      "atr14": 0.00023,
-      "last_bar_time": "2026-08-14 02:15 UTC",
-      "data_age_minutes": 16.4
+      "last_close": 0.59091,
+      "support": 0.58869,
+      "resistance": 0.59112,
+      "atr14": 0.00027,
+      "last_bar_time": "2026-08-17 01:45 UTC",
+      "data_age_minutes": 1.2
     },
     {
-      "pair": "XAUUSD",
+      "pair": "USDCHF",
       "bias": "neutral",
       "score": -1,
       "abs_score": 1,
       "risky_pending_news": false,
       "reasons": [
         "EMA20 below EMA50 (short-term downtrend)",
-        "RSI 20.5 oversold",
+        "RSI 21.1 oversold",
         "MACD below signal line (bearish momentum)"
       ],
-      "last_close": 4371.5,
-      "support": 4366.8999,
-      "resistance": 4450.3999,
-      "atr14": 9.42095,
-      "last_bar_time": "2026-08-14 02:15 UTC",
-      "data_age_minutes": 16.4
+      "last_close": 0.81199,
+      "support": 0.8109,
+      "resistance": 0.81344,
+      "atr14": 0.00038,
+      "last_bar_time": "2026-08-17 01:45 UTC",
+      "data_age_minutes": 1.2
     },
     {
       "pair": "XAGUSD",
       "bias": "neutral",
-      "score": -1,
+      "score": 1,
       "abs_score": 1,
       "risky_pending_news": false,
       "reasons": [
-        "EMA20 below EMA50 (short-term downtrend)",
-        "RSI 23.7 oversold",
-        "MACD below signal line (bearish momentum)"
-      ],
-      "last_close": 64.0,
-      "support": 63.945,
-      "resistance": 65.415,
-      "atr14": 0.21812,
-      "last_bar_time": "2026-08-14 02:15 UTC",
-      "data_age_minutes": 16.4
-    },
-    {
-      "pair": "GBPUSD",
-      "bias": "neutral",
-      "score": 0,
-      "abs_score": 0,
-      "risky_pending_news": false,
-      "reasons": [
         "EMA20 above EMA50 (short-term uptrend)",
-        "RSI 52.9 neutral",
-        "MACD below signal line (bearish momentum)"
+        "RSI 75.1 overbought",
+        "MACD above signal line (bullish momentum)"
       ],
-      "last_close": 1.3492,
-      "support": 1.34822,
-      "resistance": 1.35077,
-      "atr14": 0.00032,
-      "last_bar_time": "2026-08-14 02:30 UTC",
-      "data_age_minutes": 1.3
-    },
-    {
-      "pair": "USDJPY",
-      "bias": "neutral",
-      "score": 0,
-      "abs_score": 0,
-      "risky_pending_news": false,
-      "reasons": [
-        "EMA20 above EMA50 (short-term uptrend)",
-        "RSI 41.0 neutral",
-        "MACD below signal line (bearish momentum)"
-      ],
-      "last_close": 159.39301,
-      "support": 159.13499,
-      "resistance": 159.55099,
-      "atr14": 0.05653,
-      "last_bar_time": "2026-08-14 02:30 UTC",
-      "data_age_minutes": 1.3
-    },
-    {
-      "pair": "AUDUSD",
-      "bias": "neutral",
-      "score": 0,
-      "abs_score": 0,
-      "risky_pending_news": false,
-      "reasons": [
-        "EMA20 above EMA50 (short-term uptrend)",
-        "RSI 38.6 neutral",
-        "MACD below signal line (bearish momentum)"
-      ],
-      "last_close": 0.70597,
-      "support": 0.70577,
-      "resistance": 0.70676,
-      "atr14": 0.0002,
-      "last_bar_time": "2026-08-14 02:15 UTC",
-      "data_age_minutes": 16.3
+      "last_close": 66.0,
+      "support": 64.81,
+      "resistance": 66.055,
+      "atr14": 0.21998,
+      "last_bar_time": "2026-08-17 01:30 UTC",
+      "data_age_minutes": 16.2
     },
     {
       "pair": "USDCAD",
       "bias": "neutral",
       "score": 0,
       "abs_score": 0,
-      "risky_pending_news": false,
+      "risky_pending_news": true,
       "reasons": [
         "EMA20 below EMA50 (short-term downtrend)",
-        "RSI 49.0 neutral",
+        "RSI 39.0 neutral",
         "MACD above signal line (bullish momentum)"
       ],
-      "last_close": 1.39254,
-      "support": 1.3921,
-      "resistance": 1.39439,
-      "atr14": 0.00078,
-      "last_bar_time": "2026-08-14 02:30 UTC",
-      "data_age_minutes": 1.3
-    },
-    {
-      "pair": "USDCHF",
-      "bias": "neutral",
-      "score": 0,
-      "abs_score": 0,
-      "risky_pending_news": false,
-      "reasons": [
-        "EMA20 above EMA50 (short-term uptrend)",
-        "RSI 47.8 neutral",
-        "MACD below signal line (bearish momentum)"
-      ],
-      "last_close": 0.8139,
-      "support": 0.81176,
-      "resistance": 0.81459,
-      "atr14": 0.00038,
-      "last_bar_time": "2026-08-14 02:30 UTC",
-      "data_age_minutes": 1.4
+      "last_close": 1.38673,
+      "support": 1.38646,
+      "resistance": 1.38816,
+      "atr14": 0.00069,
+      "last_bar_time": "2026-08-17 01:45 UTC",
+      "data_age_minutes": 1.2
     }
   ]
 }
