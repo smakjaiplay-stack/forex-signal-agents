@@ -1,45 +1,66 @@
 {
-  "generated_at": "2026-08-17T01:46:10.986017+00:00",
+  "generated_at": "2026-08-18T01:40:53.744340+00:00",
   "calendar_events_today": [
     {
-      "time": "2026-08-17T08:30:00-04:00",
-      "currency": "CAD",
-      "title": "CPI m/m",
+      "time": "2026-08-18T02:00:00-04:00",
+      "currency": "GBP",
+      "title": "Claimant Count Change",
       "impact": "High",
-      "forecast": "0.4%",
-      "previous": "-0.4%",
+      "forecast": "16.5K",
+      "previous": "6.7K",
       "actual": null
     },
     {
-      "time": "2026-08-17T08:30:00-04:00",
-      "currency": "CAD",
-      "title": "Median CPI y/y",
-      "impact": "High",
-      "forecast": "2.0%",
-      "previous": "1.9%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-17T08:30:00-04:00",
-      "currency": "CAD",
-      "title": "Trimmed CPI y/y",
-      "impact": "High",
-      "forecast": "1.8%",
-      "previous": "1.8%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-17T08:30:00-04:00",
-      "currency": "CAD",
-      "title": "Common CPI y/y",
+      "time": "2026-08-18T02:00:00-04:00",
+      "currency": "GBP",
+      "title": "Average Earnings Index 3m/y",
       "impact": "Medium",
-      "forecast": "2.5%",
-      "previous": "2.6%",
+      "forecast": "4.0%",
+      "previous": "4.3%",
+      "actual": null
+    },
+    {
+      "time": "2026-08-18T21:30:00-04:00",
+      "currency": "AUD",
+      "title": "Wage Price Index q/q",
+      "impact": "Medium",
+      "forecast": "0.8%",
+      "previous": "0.8%",
       "actual": null
     }
   ],
   "calendar_error": null,
   "news_headlines": [
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Dollar slips on pared Fed rate hike bets, but losses capped by rising oil prices",
+      "published": "2026-08-17 20:18:03",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-ticks-up-on-reduced-fed-hike-bets-yen-gains-despite-weak-japan-gdp-4862111"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Latin American currencies gain as Fed rate hike bets ease",
+      "published": "2026-08-17 20:02:27",
+      "link": "https://www.investing.com/news/forex-news/latin-american-currencies-gain-as-fed-rate-hike-bets-ease-93CH-4863871"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Canadian dollar rises as inflation exceeds expectations",
+      "published": "2026-08-17 15:26:59",
+      "link": "https://www.investing.com/news/forex-news/canadian-dollar-rises-as-inflation-exceeds-expectations-93CH-4863620"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Bond market holds range as dovish U.S. data clash with Persian Gulf supply risks",
+      "published": "2026-08-17 11:53:19",
+      "link": "https://www.investing.com/news/forex-news/german-bund-yields-hold-flat-near-multiday-highs-as-rate-hike-fears-recede-4862206"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Sterling today: Pound advance as weak US retail data dims Fed hike bets",
+      "published": "2026-08-17 07:57:18",
+      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-advance-as-weak-us-retail-data-dims-fed-hike-bets-4862294"
+    },
     {
       "source": "Investing.com - Forex News",
       "title": "What happens if USD/JPY goes above 160? ‘Credibility falls further’",
@@ -59,82 +80,52 @@
       "link": "https://www.investing.com/news/forex-news/canadian-dollar-hits-twomonth-high-on-factory-data-93CH-4861347"
     },
     {
-      "source": "Investing.com - Forex News",
-      "title": "India central bank closes forex swap facility early after $50bn inflow",
-      "published": "2026-08-14 13:29:43",
-      "link": "https://www.investing.com/news/forex-news/india-central-bank-closes-forex-swap-facility-early-after-50bn-inflow-93CH-4860954"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "U.S. Treasuries consolidate as two-year yield lingers near multi-week lows",
-      "published": "2026-08-14 12:09:22",
-      "link": "https://www.investing.com/news/forex-news/european-debt-desks-digest-disinflation-and-persian-gulf-energy-risks-4859881"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "UBS sets new target for USD/CAD on rate differential outlook",
-      "published": "2026-08-14 08:49:44",
-      "link": "https://www.investing.com/news/forex-news/ubs-sets-new-target-for-usdcad-on-rate-differential-outlook-93CH-4860016"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Sterling today: Pound rises as dollar weakens on dovish Fed expectations",
-      "published": "2026-08-14 08:45:14",
-      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-rises-as-dollar-weakens-on-dovish-fed-expectations-4860004"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Dollar falls as traders reduce Fed rate hike bets; sterling slips after GDP data",
-      "published": "2026-08-13 19:44:38",
-      "link": "https://www.investing.com/news/forex-news/asia-fx-dollar-steady-as-traders-weigh-fed-outlook-after-inline-us-cpi-4856590"
+      "source": "FXStreet - News",
+      "title": "British Pound gathers strength to near 1.3550 as Fed hike bets fade, UK jobs data loom",
+      "published": "Tue, 18 Aug 2026 01:27:36 GMT",
+      "link": "https://www.fxstreet.com/news/british-pound-gathers-strength-to-near-13550-as-fed-hike-bets-fade-uk-jobs-data-loom-202608180127"
     },
     {
       "source": "FXStreet - News",
-      "title": "PBOC sets USD/CNY reference rate at 6.7873 vs. 6.7878 previous",
-      "published": "Mon, 17 Aug 2026 01:15:44 GMT",
-      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67873-vs-67878-previous-202608170115"
+      "title": "PBOC sets USD/CNY reference rate at 6.7905 vs. 6.7873 previous",
+      "published": "Tue, 18 Aug 2026 01:15:34 GMT",
+      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67905-vs-67873-previous-202608180115"
     },
     {
       "source": "FXStreet - News",
-      "title": "Japanese Yen gains against weaker US Dollar following softer Q2 GDP data",
-      "published": "Mon, 17 Aug 2026 01:12:29 GMT",
-      "link": "https://www.fxstreet.com/news/japanese-yen-gains-against-weaker-us-dollar-following-softer-q2-gdp-data-202608170112"
+      "title": "Euro flat lines below two-month high as oil-driven inflation fears support USD",
+      "published": "Tue, 18 Aug 2026 01:14:26 GMT",
+      "link": "https://www.fxstreet.com/news/euro-flat-lines-below-two-month-low-as-oil-driven-inflation-fears-support-usd-202608180114"
     },
     {
       "source": "FXStreet - News",
-      "title": "British Pound trades near three-month top as fading Fed hike bets undermine USD",
-      "published": "Mon, 17 Aug 2026 01:11:49 GMT",
-      "link": "https://www.fxstreet.com/news/british-pound-trades-near-three-month-top-as-fading-fed-hike-bets-undermine-usd-202608170111"
+      "title": "Australian Dollar gains as US Dollar struggles amid fading Fed rate hike bets",
+      "published": "Tue, 18 Aug 2026 01:00:26 GMT",
+      "link": "https://www.fxstreet.com/news/australian-dollar-gains-as-us-dollar-struggles-amid-fading-fed-rate-hike-bets-202608180100"
     },
     {
       "source": "FXStreet - News",
-      "title": "Gold gains momentum to near $4,400 as Fed hike expectations drop despite Us-Iran tensions",
-      "published": "Mon, 17 Aug 2026 00:58:56 GMT",
-      "link": "https://www.fxstreet.com/news/gold-gains-momentum-to-near-4-400-as-fed-hike-expectations-drop-despite-us-iran-tensions-202608170058"
+      "title": "WTI flatlines near $84.00 as Trump rejects truce extension",
+      "published": "Tue, 18 Aug 2026 00:29:33 GMT",
+      "link": "https://www.fxstreet.com/news/wti-flatlines-near-8400-as-trump-rejects-truce-extension-202608180029"
     },
     {
       "source": "FXStreet - News",
-      "title": "Euro strengthens above 1.1550 as Fed rate hike bets fade",
-      "published": "Mon, 17 Aug 2026 00:20:51 GMT",
-      "link": "https://www.fxstreet.com/news/euro-strengthens-above-11550-as-fed-rate-hike-bets-fade-202608170020"
+      "title": "US President Donald Trump says not seeking extension of Iran MOU",
+      "published": "Mon, 17 Aug 2026 23:40:07 GMT",
+      "link": "https://www.fxstreet.com/news/us-president-donald-trump-says-not-seeking-extension-of-iran-mou-202608172340"
     },
     {
       "source": "FXStreet - News",
-      "title": "Japan’s GDP grows 0.3% QoQ in Q2 2026 vs 0.5% expected",
-      "published": "Sun, 16 Aug 2026 23:53:48 GMT",
-      "link": "https://www.fxstreet.com/news/japans-gdp-grows-03-qoq-in-q2-2026-vs-05-expected-202608162353"
+      "title": "Gold gains momentum above $4,400 as softer US data dampens Fed hike odds",
+      "published": "Mon, 17 Aug 2026 23:27:26 GMT",
+      "link": "https://www.fxstreet.com/news/gold-gains-momentum-above-4-400-as-softer-us-data-dampens-fed-hike-odds-202608172327"
     },
     {
       "source": "FXStreet - News",
-      "title": "Australian Dollar gains traction to near 0.7100 on fading Fed hike bets",
-      "published": "Sun, 16 Aug 2026 23:29:08 GMT",
-      "link": "https://www.fxstreet.com/news/australian-dollar-gains-traction-to-near-07100-on-fading-fed-hike-bets-202608162329"
-    },
-    {
-      "source": "FXStreet - News",
-      "title": "Israel attacks Lebanon as US prepares fresh Iran sanctions",
-      "published": "Sun, 16 Aug 2026 23:03:26 GMT",
-      "link": "https://www.fxstreet.com/news/israel-strikes-lebanon-as-us-prepares-fresh-iran-sanctions-202608162303"
+      "title": "Australian Dollar climbs as the Greenback falls on soft US data",
+      "published": "Mon, 17 Aug 2026 23:04:08 GMT",
+      "link": "https://www.fxstreet.com/news/australian-dollar-climbs-as-the-greenback-falls-on-soft-us-data-202608172304"
     }
   ],
   "news_errors": []
