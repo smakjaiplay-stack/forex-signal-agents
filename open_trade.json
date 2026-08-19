@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "pair": "NZDUSD",
+    "action": "Sell",
+    "entry_price": 0.5871,
+    "take_profit_1": 0.58686,
+    "take_profit_2": 0.58661,
+    "take_profit_3": 0.58637,
+    "stop_loss": 0.58757,
+    "current_sl": 0.58757,
+    "opened_at": "2026-08-19T01:43:03.598700+00:00",
+    "closed": false,
+    "alerts_sent": {
+      "tp1": false,
+      "tp2": false,
+      "tp3": false,
+      "sl": false
+    }
+  }
+]
