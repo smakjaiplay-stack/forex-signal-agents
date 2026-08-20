@@ -1,63 +1,57 @@
 {
-  "generated_at": "2026-08-19T01:42:59.517594+00:00",
+  "generated_at": "2026-08-20T01:41:27.512999+00:00",
   "calendar_events_today": [
     {
-      "time": "2026-08-19T02:00:00-04:00",
-      "currency": "GBP",
-      "title": "CPI y/y",
-      "impact": "High",
-      "forecast": "2.9%",
-      "previous": "2.6%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-19T03:10:00-04:00",
-      "currency": "EUR",
-      "title": "ECB President Lagarde Speaks",
-      "impact": "Medium",
-      "forecast": "",
-      "previous": "",
-      "actual": null
-    },
-    {
-      "time": "2026-08-19T06:15:00-04:00",
-      "currency": "EUR",
-      "title": "ECB President Lagarde Speaks",
-      "impact": "Medium",
-      "forecast": "",
-      "previous": "",
-      "actual": null
-    },
-    {
-      "time": "2026-08-19T14:00:00-04:00",
+      "time": "2026-08-20T08:30:00-04:00",
       "currency": "USD",
-      "title": "FOMC Meeting Minutes",
-      "impact": "High",
-      "forecast": "",
-      "previous": "",
+      "title": "Philly Fed Manufacturing Index",
+      "impact": "Medium",
+      "forecast": "24.1",
+      "previous": "41.4",
       "actual": null
     },
     {
-      "time": "2026-08-19T21:30:00-04:00",
-      "currency": "AUD",
-      "title": "Employment Change",
-      "impact": "High",
-      "forecast": "11.7K",
-      "previous": "76.3K",
-      "actual": null
-    },
-    {
-      "time": "2026-08-19T21:30:00-04:00",
-      "currency": "AUD",
-      "title": "Unemployment Rate",
-      "impact": "High",
-      "forecast": "4.4%",
-      "previous": "4.4%",
+      "time": "2026-08-20T08:30:00-04:00",
+      "currency": "USD",
+      "title": "Unemployment Claims",
+      "impact": "Medium",
+      "forecast": "210K",
+      "previous": "209K",
       "actual": null
     }
   ],
   "calendar_error": null,
   "news_headlines": [
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Dollar hits three-month low as Treasury buybacks sink yields; Fed flags inflation",
+      "published": "2026-08-19 19:45:56",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-rises-as-treasury-yields-ease-s-korean-won-hits-1yr-high-4866425"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Canadian dollar reaches highest level since early June",
+      "published": "2026-08-19 14:43:28",
+      "link": "https://www.investing.com/news/forex-news/canadian-dollar-reaches-highest-level-since-early-june-93CH-4867825"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Deutsche Bank calls Treasury buyback doubling similar to ’operation twist’",
+      "published": "2026-08-19 14:26:58",
+      "link": "https://www.investing.com/news/forex-news/deutsche-bank-calls-treasury-buyback-doubling-similar-to-operation-twist-4867804"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Sterling today: Pound steady after in-line inflation damps BoE rate fears",
+      "published": "2026-08-19 08:06:08",
+      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-steady-after-inline-inflation-damps-boe-rate-fears-4866615"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Analysis-Investors set sights on Swiss franc for popular carry trades after yen intervention",
+      "published": "2026-08-19 04:06:31",
+      "link": "https://www.investing.com/news/forex-news/analysisinvestors-set-sights-on-swiss-franc-for-popular-carry-trades-after-yen-intervention-4866417"
+    },
     {
       "source": "Investing.com - Forex News",
       "title": "Dollar mostly flat amid pared Fed rate hike bets, bond sell-off, and rising oil",
@@ -77,82 +71,52 @@
       "link": "https://www.investing.com/news/forex-news/south-african-rand-holds-steady-amid-mideast-tensions-93CH-4865750"
     },
     {
-      "source": "Investing.com - Forex News",
-      "title": "BofA sees lower EUR/USD through Q3 on Fed policy outlook",
-      "published": "2026-08-18 09:55:47",
-      "link": "https://www.investing.com/news/forex-news/bofa-sees-lower-eurusd-through-q3-on-fed-policy-outlook-93CH-4864635"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "BofA sees Polish zloty gains from Q4 on expected dollar weakness",
-      "published": "2026-08-18 09:23:30",
-      "link": "https://www.investing.com/news/forex-news/bofa-sees-polish-zloty-gains-from-q4-on-expected-dollar-weakness-93CH-4864582"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "BofA recommends selling AUD/NZD on policy divergence outlook",
-      "published": "2026-08-18 09:23:07",
-      "link": "https://www.investing.com/news/forex-news/bofa-recommends-selling-audnzd-on-policy-divergence-outlook-93CH-4864581"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Sterling today: Pound slips as dollar firms on energy, yields",
-      "published": "2026-08-18 08:32:48",
-      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-slips-as-dollar-firms-on-energy-yields-4864498"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Dollar slips on pared Fed rate hike bets, but losses capped by rising oil prices",
-      "published": "2026-08-17 20:18:03",
-      "link": "https://www.investing.com/news/forex-news/asia-fx-ticks-up-on-reduced-fed-hike-bets-yen-gains-despite-weak-japan-gdp-4862111"
+      "source": "FXStreet - News",
+      "title": "Australia’s Unemployment Rate jumps to 4.5% in July, vs 4.4% expected",
+      "published": "Wed, 19 Aug 2026 21:30:00 GMT",
+      "link": "https://www.fxstreet.com/news/australia-unemployment-rate-expected-to-hold-at-44-in-july-202608192130"
     },
     {
       "source": "FXStreet - News",
-      "title": "British Pound declines below 1.3550 on soft UK labour figures, traders brace for CPI data",
-      "published": "Wed, 19 Aug 2026 01:35:54 GMT",
-      "link": "https://www.fxstreet.com/news/british-pound-declines-below-13550-on-soft-uk-labour-figures-traders-brace-for-cpi-data-202608190135"
+      "title": "British Pound edges lower as USD steadies above three-month low; downside seems limited",
+      "published": "Thu, 20 Aug 2026 01:18:48 GMT",
+      "link": "https://www.fxstreet.com/news/british-pound-edges-lower-as-usd-steadies-above-three-month-low-downside-seems-limited-202608200118"
     },
     {
       "source": "FXStreet - News",
-      "title": "WTI rises to near $85.00 amid escalating US-Iran tensions",
-      "published": "Wed, 19 Aug 2026 01:23:33 GMT",
-      "link": "https://www.fxstreet.com/news/wti-rises-to-near-8500-amid-escalating-us-iran-tensions-202608190123"
+      "title": "WTI surges above $84.50 as Strait of Hormuz standoff escalate",
+      "published": "Thu, 20 Aug 2026 01:17:33 GMT",
+      "link": "https://www.fxstreet.com/news/wti-surges-above-8450-as-strait-of-hormuz-standoff-escalate-202608200117"
     },
     {
       "source": "FXStreet - News",
-      "title": "Canadian Dollar consolidates near 1.3900 vs USD ahead of US tariffs deadline, FOMC Minutes",
-      "published": "Wed, 19 Aug 2026 01:16:10 GMT",
-      "link": "https://www.fxstreet.com/news/canadian-dollar-consolidates-near-13900-vs-usd-ahead-of-us-tariffs-deadline-fomc-minutes-202608190116"
+      "title": "PBOC sets USD/CNY reference rate at 6.7808 vs. 6.7854 previous",
+      "published": "Thu, 20 Aug 2026 01:15:29 GMT",
+      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67808-vs-67854-previous-202608200115"
     },
     {
       "source": "FXStreet - News",
-      "title": "PBOC sets USD/CNY reference rate at 6.7854 vs. 6.7905 previous",
-      "published": "Wed, 19 Aug 2026 01:15:36 GMT",
-      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67854-vs-67905-previous-202608190115"
+      "title": "PBOC leaves Loan Prime Rates unchanged in August",
+      "published": "Thu, 20 Aug 2026 01:07:29 GMT",
+      "link": "https://www.fxstreet.com/news/pboc-leaves-loan-prime-rates-unchanged-in-august-202608200107"
     },
     {
       "source": "FXStreet - News",
-      "title": "Euro strengthens above 1.1550 on fading Fed hike bets",
-      "published": "Wed, 19 Aug 2026 00:46:54 GMT",
-      "link": "https://www.fxstreet.com/news/euro-strengthens-above-11550-on-fading-fed-hike-bets-202608190046"
+      "title": "Euro edges lower below 1.1700 despite fading Fed hike odds",
+      "published": "Thu, 20 Aug 2026 01:03:21 GMT",
+      "link": "https://www.fxstreet.com/news/euro-edges-lower-below-11700-despite-fading-fed-hike-odds-202608200103"
     },
     {
       "source": "FXStreet - News",
-      "title": "Australian Dollar reverses as Iran risks lift USD ahead of Fed minutes",
-      "published": "Tue, 18 Aug 2026 23:53:01 GMT",
-      "link": "https://www.fxstreet.com/news/australian-dollar-reverses-as-iran-risks-lift-usd-ahead-of-fed-minutes-202608182353"
+      "title": "US Treasury Department to buy back more longer-term bonds",
+      "published": "Wed, 19 Aug 2026 23:54:29 GMT",
+      "link": "https://www.fxstreet.com/news/us-treasury-department-to-buy-back-more-longer-term-bonds-202608192354"
     },
     {
       "source": "FXStreet - News",
-      "title": "Trump, Carney hold last-minute talks ahead of new 50% tariffs on Canadian goods",
-      "published": "Tue, 18 Aug 2026 23:40:17 GMT",
-      "link": "https://www.fxstreet.com/news/trump-carney-hold-last-minute-talks-ahead-of-new-50-tariffs-on-canadian-goods-202608182340"
-    },
-    {
-      "source": "FXStreet - News",
-      "title": "Gold steadies below $4,350 as surging yields offset support from Fed rate-hold bets",
-      "published": "Tue, 18 Aug 2026 23:25:00 GMT",
-      "link": "https://www.fxstreet.com/news/gold-steadies-below-4-350-as-surging-yields-offset-support-from-fed-rate-hold-bets-202608182325"
+      "title": "US President Donald Trump announces \"crushing economic operation\" on Iran",
+      "published": "Wed, 19 Aug 2026 23:41:11 GMT",
+      "link": "https://www.fxstreet.com/news/us-president-donald-trump-announces-crushing-economic-operation-on-iran-202608192341"
     }
   ],
   "news_errors": []
