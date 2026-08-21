@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "pair": "XAUUSD",
+    "action": "Buy",
+    "entry_price": 4591.5,
+    "take_profit_1": 4614.46,
+    "take_profit_2": 4637.41,
+    "take_profit_3": 4660.37,
+    "stop_loss": 4578.92,
+    "current_sl": 4578.92,
+    "opened_at": "2026-08-21T01:47:04.463955+00:00",
+    "closed": false,
+    "alerts_sent": {
+      "tp1": false,
+      "tp2": false,
+      "tp3": false,
+      "sl": false
+    }
+  }
+]
