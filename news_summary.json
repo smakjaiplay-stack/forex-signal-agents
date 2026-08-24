@@ -1,67 +1,13 @@
 {
-  "generated_at": "2026-08-21T01:46:59.259000+00:00",
+  "generated_at": "2026-08-24T01:47:50.651177+00:00",
   "calendar_events_today": [
     {
-      "time": "2026-08-21T02:00:00-04:00",
-      "currency": "GBP",
-      "title": "Retail Sales m/m",
+      "time": "2026-08-24T14:00:00-04:00",
+      "currency": "USD",
+      "title": "Treasury Sec Bessent Speaks",
       "impact": "Medium",
-      "forecast": "-0.5%",
-      "previous": "1.0%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-21T03:15:00-04:00",
-      "currency": "EUR",
-      "title": "French Flash Manufacturing PMI",
-      "impact": "Medium",
-      "forecast": "50.1",
-      "previous": "50.0",
-      "actual": null
-    },
-    {
-      "time": "2026-08-21T03:15:00-04:00",
-      "currency": "EUR",
-      "title": "French Flash Services PMI",
-      "impact": "Medium",
-      "forecast": "49.4",
-      "previous": "49.8",
-      "actual": null
-    },
-    {
-      "time": "2026-08-21T03:30:00-04:00",
-      "currency": "EUR",
-      "title": "German Flash Manufacturing PMI",
-      "impact": "Medium",
-      "forecast": "52.1",
-      "previous": "52.2",
-      "actual": null
-    },
-    {
-      "time": "2026-08-21T03:30:00-04:00",
-      "currency": "EUR",
-      "title": "German Flash Services PMI",
-      "impact": "Medium",
-      "forecast": "50.1",
-      "previous": "49.6",
-      "actual": null
-    },
-    {
-      "time": "2026-08-21T04:30:00-04:00",
-      "currency": "GBP",
-      "title": "Flash Manufacturing PMI",
-      "impact": "Medium",
-      "forecast": "51.6",
-      "previous": "52.8",
-      "actual": null
-    },
-    {
-      "time": "2026-08-21T04:30:00-04:00",
-      "currency": "GBP",
-      "title": "Flash Services PMI",
-      "impact": "Medium",
-      "forecast": "51.8",
-      "previous": "51.8",
+      "forecast": "",
+      "previous": "",
       "actual": null
     }
   ],
@@ -69,99 +15,99 @@
   "news_headlines": [
     {
       "source": "Investing.com - Forex News",
-      "title": "Dollar wobbles as investors balk at US Treasury’s rescue efforts",
-      "published": "2026-08-21 01:42:33",
-      "link": "https://www.investing.com/news/forex-news/dollar-wobbles-as-investors-balk-at-us-treasurys-rescue-efforts-4870745"
+      "title": "Why does the USD outlook depend on UST and Fed policy credibility?",
+      "published": "2026-08-23 09:15:22",
+      "link": "https://www.investing.com/news/forex-news/why-does-the-usd-outlook-depend-on-ust-and-fed-policy-credibility-4872435"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Canadian dollar hits near three-month high on oil, trade hopes",
-      "published": "2026-08-20 20:19:50",
-      "link": "https://www.investing.com/news/forex-news/canadian-dollar-hits-near-threemonth-high-on-oil-trade-hopes-93CH-4870446"
+      "title": "Sell U.S. dollar versus these currencies, BCA says",
+      "published": "2026-08-23 08:30:07",
+      "link": "https://www.investing.com/news/forex-news/sell-us-dollar-versus-these-currencies-bca-says-4872431"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Dollar bounces back after touching over three-month low as bond rally halts",
-      "published": "2026-08-20 19:08:33",
-      "link": "https://www.investing.com/news/forex-news/asia-fx-steadies-after-sharp-gains-dollar-near-3mth-low-as-bond-selloff-cools-4868665"
+      "title": "Will Bessent’s intervention mark a turning point for the yen?",
+      "published": "2026-08-22 20:18:41",
+      "link": "https://www.investing.com/news/forex-news/will-bessents-intervention-mark-a-turning-point-for-the-yen-4872387"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "India eases rupee export payment rules to boost global use",
-      "published": "2026-08-20 13:03:57",
-      "link": "https://www.investing.com/news/forex-news/india-eases-rupee-export-payment-rules-to-boost-global-use-93CH-4869849"
+      "title": "Breaking down the U.S.-Japan “currency alliance”",
+      "published": "2026-08-22 05:12:11",
+      "link": "https://www.investing.com/news/forex-news/breaking-down-the-usjapan-currency-alliance-4872302"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Sterling today: Pound rises as dollar slides on Treasury buyback signal",
-      "published": "2026-08-20 09:38:56",
-      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-rises-as-dollar-slides-on-treasury-buyback-signal-4869066"
+      "title": "NZD/USD, USD/JPY, and AUD/USD: top forex pairs to watch next week",
+      "published": "2026-08-21 20:47:54",
+      "link": "https://www.investing.com/news/forex-news/nzdusd-usdjpy-and-audusd-top-forex-pairs-to-watch-next-week-93CH-4872153"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "BofA recommends selling NOK/SEK on growth and rate divergence",
-      "published": "2026-08-20 09:26:08",
-      "link": "https://www.investing.com/news/forex-news/bofa-recommends-selling-noksek-on-growth-and-rate-divergence-93CH-4869047"
+      "title": "Dollar at 3-month lows after weekly slump; yen set to halt post-intervention slide",
+      "published": "2026-08-21 19:43:10",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-set-for-weekly-gains-dollar-near-3mth-lows-despite-us-treasury-move-4870812"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "BofA sees euro upside, dollar downside risks in near-term outlook",
-      "published": "2026-08-20 09:26:00",
-      "link": "https://www.investing.com/news/forex-news/bofa-sees-euro-upside-dollar-downside-risks-in-nearterm-outlook-93CH-4869046"
+      "title": "Emerging market currencies hit new highs amid dollar weakness",
+      "published": "2026-08-21 13:17:37",
+      "link": "https://www.investing.com/news/forex-news/emerging-market-currencies-hit-new-highs-amid-dollar-weakness-93CH-4871706"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "U.S. yields resume ascent as long-end selling overshadows Asian and European rally",
-      "published": "2026-08-20 07:34:13",
-      "link": "https://www.investing.com/news/forex-news/global-yields-retrench-from-multidecade-peaks-after-us-treasury-buybacks-4868742"
+      "title": "India’s forex reserves reach $716.9 billion, highest in six months",
+      "published": "2026-08-21 13:07:50",
+      "link": "https://www.investing.com/news/forex-news/indias-forex-reserves-reach-7169-billion-highest-in-six-months-93CH-4871663"
     },
     {
       "source": "FXStreet - News",
-      "title": "New Zealand Dollar extends gains to fresh high since June, above mid-0.5900s vs softer USD",
-      "published": "Fri, 21 Aug 2026 01:41:37 GMT",
-      "link": "https://www.fxstreet.com/news/new-zealand-dollar-extends-gains-to-fresh-high-since-june-above-mid-05900s-vs-softer-usd-202608210141"
+      "title": "Gold gains momentum above $4,600 on US Treasury buyback plans",
+      "published": "Mon, 24 Aug 2026 01:40:30 GMT",
+      "link": "https://www.fxstreet.com/news/gold-gains-momentum-above-4-600-on-us-treasury-buyback-plans-202608240140"
     },
     {
       "source": "FXStreet - News",
-      "title": "Euro gains on hawkish ECB outlook despite firm US Dollar",
-      "published": "Fri, 21 Aug 2026 01:22:50 GMT",
-      "link": "https://www.fxstreet.com/news/euro-gains-on-hawkish-ecb-outlook-despite-firm-us-dollar-202608210122"
+      "title": "WTI slips below $85.00 as traders take profits before new US sanctions on Iran",
+      "published": "Mon, 24 Aug 2026 01:30:59 GMT",
+      "link": "https://www.fxstreet.com/news/wti-slips-below-8500-as-traders-take-profits-before-new-us-sanctions-on-iran-202608240130"
     },
     {
       "source": "FXStreet - News",
-      "title": "PBOC sets USD/CNY reference rate at 6.7817 vs. 6.7808 previous",
-      "published": "Fri, 21 Aug 2026 01:15:46 GMT",
-      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67817-vs-67808-previous-202608210115"
+      "title": "British Pound holds near Feb. 11 highs vs weak USD as bulls await breakout above 1.3660",
+      "published": "Mon, 24 Aug 2026 01:16:31 GMT",
+      "link": "https://www.fxstreet.com/news/british-pound-holds-near-feb-11-highs-vs-weak-usd-as-bulls-await-breakout-above-13660-202608240116"
     },
     {
       "source": "FXStreet - News",
-      "title": "WTI consolidates around $86.00; bulls potential intact amid US-Iran impasse",
-      "published": "Fri, 21 Aug 2026 01:09:56 GMT",
-      "link": "https://www.fxstreet.com/news/wti-consolidates-around-8600-bulls-potential-intact-amid-us-iran-impasse-202608210109"
+      "title": "PBOC sets USD/CNY reference rate at 6.7841 vs. 6.7817 previous",
+      "published": "Mon, 24 Aug 2026 01:15:38 GMT",
+      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67841-vs-67817-previous-202608240115"
     },
     {
       "source": "FXStreet - News",
-      "title": "Japanese Yen flatlines after CPI inflation report",
-      "published": "Fri, 21 Aug 2026 00:58:01 GMT",
-      "link": "https://www.fxstreet.com/news/japanese-yen-flatlines-after-cpi-inflation-report-202608210058"
+      "title": "Euro holds steady against US Dollar amid US debt strategy",
+      "published": "Mon, 24 Aug 2026 00:55:49 GMT",
+      "link": "https://www.fxstreet.com/news/euro-holds-steady-against-us-dollar-amid-us-debt-strategy-202608240055"
     },
     {
       "source": "FXStreet - News",
-      "title": "Bessent says US unlikely to resume large-scale Iran combat, steps up economic pressure",
-      "published": "Thu, 20 Aug 2026 23:52:36 GMT",
-      "link": "https://www.fxstreet.com/news/bessent-says-us-unlikely-to-resume-large-scale-iran-combat-steps-up-economic-pressure-202608202352"
+      "title": "Canada’s Carney: Retaliatory tariffs will start September 8",
+      "published": "Mon, 24 Aug 2026 00:47:43 GMT",
+      "link": "https://www.fxstreet.com/news/canadas-carney-retaliatory-tariffs-will-start-september-8-202608240047"
     },
     {
       "source": "FXStreet - News",
-      "title": "Gold drifts higher above $4,500 on US Treasury buyback",
-      "published": "Thu, 20 Aug 2026 23:37:16 GMT",
-      "link": "https://www.fxstreet.com/news/gold-drifts-higher-above-4-500-on-us-treasury-buyback-202608202337"
+      "title": "Australian Dollar posts modest gains above 0.7150 on US Treasury buyback worries",
+      "published": "Mon, 24 Aug 2026 00:39:26 GMT",
+      "link": "https://www.fxstreet.com/news/australian-dollar-posts-modest-gains-above-07150-on-us-treasury-buyback-worries-202608240039"
     },
     {
       "source": "FXStreet - News",
-      "title": "Japan’s National CPI climbs 2.0% YoY in July, Core CPI rises as expected",
-      "published": "Thu, 20 Aug 2026 23:32:02 GMT",
-      "link": "https://www.fxstreet.com/news/japans-national-cpi-climbs-20-yoy-in-july-core-cpi-rises-as-expected-202608202332"
+      "title": "New Zealand Dollar edges lower below 0.6000 after weaker Retail Sales data",
+      "published": "Sun, 23 Aug 2026 23:39:41 GMT",
+      "link": "https://www.fxstreet.com/news/new-zealand-dollar-edges-lower-below-06000-after-weaker-retail-sales-data-202608232339"
     }
   ],
   "news_errors": []
