@@ -1,18 +1,69 @@
 {
-  "generated_at": "2026-08-24T01:47:50.651177+00:00",
+  "generated_at": "2026-08-25T01:41:56.240569+00:00",
   "calendar_events_today": [
     {
-      "time": "2026-08-24T14:00:00-04:00",
+      "time": "2026-08-25T10:00:00-04:00",
       "currency": "USD",
-      "title": "Treasury Sec Bessent Speaks",
+      "title": "CB Consumer Confidence",
       "impact": "Medium",
-      "forecast": "",
-      "previous": "",
+      "forecast": "90.3",
+      "previous": "90.8",
+      "actual": null
+    },
+    {
+      "time": "2026-08-25T21:30:00-04:00",
+      "currency": "AUD",
+      "title": "CPI m/m",
+      "impact": "High",
+      "forecast": "0.9%",
+      "previous": "-0.1%",
+      "actual": null
+    },
+    {
+      "time": "2026-08-25T21:30:00-04:00",
+      "currency": "AUD",
+      "title": "CPI y/y",
+      "impact": "High",
+      "forecast": "3.3%",
+      "previous": "3.8%",
+      "actual": null
+    },
+    {
+      "time": "2026-08-25T21:30:00-04:00",
+      "currency": "AUD",
+      "title": "Trimmed Mean CPI m/m",
+      "impact": "High",
+      "forecast": "0.4%",
+      "previous": "0.3%",
       "actual": null
     }
   ],
   "calendar_error": null,
   "news_headlines": [
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Canadian dollar slips as trade tensions weigh on loonie",
+      "published": "2026-08-24 20:30:09",
+      "link": "https://www.investing.com/news/forex-news/canadian-dollar-slips-as-trade-tensions-weigh-on-loonie-4874160"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Dollar firms after nearly 1% weekly loss; loonie slides amid rising trade tensions",
+      "published": "2026-08-24 19:16:43",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-rangebound-dollar-holds-near-3mth-lows-amid-us-debt-iran-risks-4872621"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Sterling today: Pound slips as dollar policy jitters, Iran sanctions weigh",
+      "published": "2026-08-24 08:39:58",
+      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-slips-as-dollar-policy-jitters-iran-sanctions-weigh-4872845"
+    },
+    {
+      "source": "Investing.com - Forex News",
+      "title": "Global bonds freeze as U.S. prepares ’greatest financial offensive’ against Iran",
+      "published": "2026-08-24 08:11:27",
+      "link": "https://www.investing.com/news/forex-news/global-bonds-freeze-as-us-prepares-greatest-financial-offensive-against-iran-4872693"
+    },
     {
       "source": "Investing.com - Forex News",
       "title": "Why does the USD outlook depend on UST and Fed policy credibility?",
@@ -38,76 +89,52 @@
       "link": "https://www.investing.com/news/forex-news/breaking-down-the-usjapan-currency-alliance-4872302"
     },
     {
-      "source": "Investing.com - Forex News",
-      "title": "NZD/USD, USD/JPY, and AUD/USD: top forex pairs to watch next week",
-      "published": "2026-08-21 20:47:54",
-      "link": "https://www.investing.com/news/forex-news/nzdusd-usdjpy-and-audusd-top-forex-pairs-to-watch-next-week-93CH-4872153"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Dollar at 3-month lows after weekly slump; yen set to halt post-intervention slide",
-      "published": "2026-08-21 19:43:10",
-      "link": "https://www.investing.com/news/forex-news/asia-fx-set-for-weekly-gains-dollar-near-3mth-lows-despite-us-treasury-move-4870812"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "Emerging market currencies hit new highs amid dollar weakness",
-      "published": "2026-08-21 13:17:37",
-      "link": "https://www.investing.com/news/forex-news/emerging-market-currencies-hit-new-highs-amid-dollar-weakness-93CH-4871706"
-    },
-    {
-      "source": "Investing.com - Forex News",
-      "title": "India’s forex reserves reach $716.9 billion, highest in six months",
-      "published": "2026-08-21 13:07:50",
-      "link": "https://www.investing.com/news/forex-news/indias-forex-reserves-reach-7169-billion-highest-in-six-months-93CH-4871663"
+      "source": "FXStreet - News",
+      "title": "WTI holds ground above $84.50 as escalating concerns over US sanctions on Iran",
+      "published": "Tue, 25 Aug 2026 01:35:23 GMT",
+      "link": "https://www.fxstreet.com/news/wti-holds-ground-above-8450-as-escalating-concerns-over-us-sanctions-on-iran-202608250135"
     },
     {
       "source": "FXStreet - News",
-      "title": "Gold gains momentum above $4,600 on US Treasury buyback plans",
-      "published": "Mon, 24 Aug 2026 01:40:30 GMT",
-      "link": "https://www.fxstreet.com/news/gold-gains-momentum-above-4-600-on-us-treasury-buyback-plans-202608240140"
+      "title": "RBA Minutes: Board ready to raise rates if upside risks materialise",
+      "published": "Tue, 25 Aug 2026 01:32:40 GMT",
+      "link": "https://www.fxstreet.com/news/rba-minutes-board-ready-to-raise-rates-if-upside-risks-materialise-202608250132"
     },
     {
       "source": "FXStreet - News",
-      "title": "WTI slips below $85.00 as traders take profits before new US sanctions on Iran",
-      "published": "Mon, 24 Aug 2026 01:30:59 GMT",
-      "link": "https://www.fxstreet.com/news/wti-slips-below-8500-as-traders-take-profits-before-new-us-sanctions-on-iran-202608240130"
+      "title": "Iran’s Economy Minister Madanizadeh: Enemies should wait for an attack",
+      "published": "Tue, 25 Aug 2026 01:28:09 GMT",
+      "link": "https://www.fxstreet.com/news/irans-economy-minister-madanizadeh-enemies-should-wait-for-an-attack-202608250128"
     },
     {
       "source": "FXStreet - News",
-      "title": "British Pound holds near Feb. 11 highs vs weak USD as bulls await breakout above 1.3660",
-      "published": "Mon, 24 Aug 2026 01:16:31 GMT",
-      "link": "https://www.fxstreet.com/news/british-pound-holds-near-feb-11-highs-vs-weak-usd-as-bulls-await-breakout-above-13660-202608240116"
+      "title": "Japanese Yen consolidates around 159.00 vs USD as bearish potential remains intact",
+      "published": "Tue, 25 Aug 2026 01:16:36 GMT",
+      "link": "https://www.fxstreet.com/news/japanese-yen-consolidates-around-15900-vs-usd-as-bearish-potential-remains-intact-202608250116"
     },
     {
       "source": "FXStreet - News",
-      "title": "PBOC sets USD/CNY reference rate at 6.7841 vs. 6.7817 previous",
-      "published": "Mon, 24 Aug 2026 01:15:38 GMT",
-      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67841-vs-67817-previous-202608240115"
+      "title": "PBOC sets USD/CNY reference rate at 6.7852 vs. 6.7841 previous",
+      "published": "Tue, 25 Aug 2026 01:15:52 GMT",
+      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67852-vs-67841-previous-202608250115"
     },
     {
       "source": "FXStreet - News",
-      "title": "Euro holds steady against US Dollar amid US debt strategy",
-      "published": "Mon, 24 Aug 2026 00:55:49 GMT",
-      "link": "https://www.fxstreet.com/news/euro-holds-steady-against-us-dollar-amid-us-debt-strategy-202608240055"
+      "title": "Euro gains support amid hawkish ECB expectations, subdued US Dollar",
+      "published": "Tue, 25 Aug 2026 01:08:50 GMT",
+      "link": "https://www.fxstreet.com/news/euro-gains-support-amid-hawkish-ecb-expectations-subdued-us-dollar-202608250108"
     },
     {
       "source": "FXStreet - News",
-      "title": "Canada’s Carney: Retaliatory tariffs will start September 8",
-      "published": "Mon, 24 Aug 2026 00:47:43 GMT",
-      "link": "https://www.fxstreet.com/news/canadas-carney-retaliatory-tariffs-will-start-september-8-202608240047"
+      "title": "Australian Dollar falls as Iran sanctions sour risk appetite, RBA minutes eyed",
+      "published": "Mon, 24 Aug 2026 22:58:23 GMT",
+      "link": "https://www.fxstreet.com/news/australian-dollar-falls-as-iran-sanctions-sour-risk-appetite-rba-minutes-eyed-202608242258"
     },
     {
       "source": "FXStreet - News",
-      "title": "Australian Dollar posts modest gains above 0.7150 on US Treasury buyback worries",
-      "published": "Mon, 24 Aug 2026 00:39:26 GMT",
-      "link": "https://www.fxstreet.com/news/australian-dollar-posts-modest-gains-above-07150-on-us-treasury-buyback-worries-202608240039"
-    },
-    {
-      "source": "FXStreet - News",
-      "title": "New Zealand Dollar edges lower below 0.6000 after weaker Retail Sales data",
-      "published": "Sun, 23 Aug 2026 23:39:41 GMT",
-      "link": "https://www.fxstreet.com/news/new-zealand-dollar-edges-lower-below-06000-after-weaker-retail-sales-data-202608232339"
+      "title": "Chinese Yuan: Targeting 6.7200 against US Dollar – UOB",
+      "published": "Mon, 24 Aug 2026 22:33:00 GMT",
+      "link": "https://www.fxstreet.com/news/chinese-yuan-targeting-67200-against-us-dollar-uob-202608242233"
     }
   ],
   "news_errors": []
