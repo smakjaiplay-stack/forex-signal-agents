@@ -15,7 +15,8 @@
       "tp2": false,
       "tp3": false,
       "sl": false
-    }
+    },
+    "last_checked_at": "2026-08-26T03:09:44.064724+00:00"
   },
   {
     "pair": "AUDUSD",
@@ -33,6 +34,7 @@
       "tp2": false,
       "tp3": false,
       "sl": false
-    }
+    },
+    "last_checked_at": "2026-08-26T03:09:44.407307+00:00"
   }
 ]
