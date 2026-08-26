@@ -1,9 +1,15 @@
 """
 Agent 4 - LINE Notifier
 =========================
-Reads Agent 3's signal.json and sends it as a formatted LINE message using
-the LINE Messaging API Broadcast endpoint (sends to everyone who has added
-your bot as a friend — fine for personal/solo use).
+Reads Agent 6's signal_reviewed.json — Agent 3's signals after the QC layer
+has vetted them — and sends them as a formatted LINE message using the LINE
+Messaging API Broadcast endpoint (sends to everyone who has added your bot as
+a friend — fine for personal/solo use).
+
+What QC does to what gets sent:
+    approved   — sent as normal
+    downgraded — sent, with the QC warning and flags attached to the card
+    blocked    — not sent at all
 
 Setup:
     1. Create a Messaging API channel at https://developers.line.biz
@@ -15,7 +21,7 @@ Setup:
 
 Usage:
     python agent4_line_notifier.py
-    python agent4_line_notifier.py --signal signal.json
+    python agent4_line_notifier.py --signal signal_reviewed.json --dry-run
 """
 
 import argparse
@@ -32,6 +38,12 @@ def build_signal_block(signal: dict) -> list:
     """One trade card, as a list of lines."""
     direction_emoji = {"bullish": "🟢 BUY", "bearish": "🔴 SELL", "neutral": "⚪ NEUTRAL"}
     direction_label = direction_emoji.get(signal.get("direction"), str(signal.get("direction")).upper())
+
+    # A signal QC turned into a Wait keeps its bullish/bearish read, but the
+    # card must not open with a green BUY banner on a trade you shouldn't take.
+    original_action = signal.get("original_action")
+    if signal.get("action") == "Wait" and original_action in ("Buy", "Sell"):
+        direction_label = f"⚪ NO TRADE (QC held back a {original_action})"
 
     confidence_emoji = {"high": "🔥", "medium": "⚖️", "low": "⚠️"}
     conf_label = confidence_emoji.get(signal.get("confidence"), "")
@@ -66,6 +78,39 @@ def build_signal_block(signal: dict) -> list:
     if signal.get("pending_high_impact_news"):
         lines.append("⚠️ High-impact news pending for this pair — expect volatility.")
 
+    lines.extend(build_qc_warning(signal))
+
+    return lines
+
+
+def build_qc_warning(signal: dict) -> list:
+    """Agent 6's verdict, spelled out on the card.
+
+    Only downgraded signals reach here — blocked ones are filtered out before
+    the message is built, and approved ones have nothing to warn about. The
+    warning goes last so it's the final thing read before acting on the card.
+    """
+    if signal.get("qc_status") != "downgraded":
+        return []
+
+    flags = ", ".join(signal.get("qc_flags", [])) or "unspecified"
+    lines = [f"🛑 QC WARNING [{flags}]"]
+
+    original_action = signal.get("original_action")
+    if original_action and original_action != signal.get("action"):
+        lines.append(
+            f"   Downgraded {original_action} → {signal.get('action')} by QC — do not enter this trade."
+        )
+
+    original_possibility = signal.get("original_possibility_percent")
+    if original_possibility is not None:
+        lines.append(
+            f"   Possibility cut {original_possibility}% → {signal.get('possibility_percent')}%"
+        )
+
+    if signal.get("qc_notes"):
+        lines.append(f"   {signal['qc_notes']}")
+
     return lines
 
 
@@ -74,11 +119,16 @@ def select_signals(signal_data: dict, send_all: bool) -> list:
 
     The pipeline runs several times a day now, so by default only signals
     Agent 3 flagged as new go out — otherwise the same trade would be
-    broadcast again on every run until it closes."""
+    broadcast again on every run until it closes.
+
+    Anything Agent 6 blocked is dropped here regardless of --all: a blocked
+    signal failed QC outright (stale data, most often), and the whole point of
+    the QC layer is that those never reach your phone."""
     signals = signal_data.get("signals")
     if signals is None:
         # Legacy single-signal signal.json
         signals = [signal_data["signal"]] if signal_data.get("signal") else []
+    signals = [s for s in signals if s.get("qc_status") != "blocked"]
     if send_all:
         return signals
     return [s for s in signals if s.get("new")]
@@ -112,7 +162,8 @@ def send_broadcast(token: str, text: str):
 
 def main():
     parser = argparse.ArgumentParser(description="Agent 4 - LINE Notifier")
-    parser.add_argument("--signal", default="signal.json", help="Path to Agent 3 output")
+    parser.add_argument("--signal", default="signal_reviewed.json",
+                         help="Path to Agent 6 output (QC-reviewed signals)")
     parser.add_argument("--dry-run", action="store_true", help="Print the message instead of sending to LINE")
     parser.add_argument("--all", action="store_true",
                          help="Send every published signal, not just the ones flagged new")

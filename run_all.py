@@ -1,7 +1,11 @@
 """
 run_all.py - Runs the full forex signal pipeline end-to-end:
     Agent 1 (News Reader) -> Agent 2 (Technical Analyzer)
-    -> Agent 3 (Signal Synthesizer) -> Agent 4 (LINE Notifier)
+    -> Agent 3 (Signal Synthesizer) -> Agent 6 (QC Reviewer)
+    -> Agent 4 (LINE Notifier)
+
+Agent 6 sits between synthesis and notification on purpose: nothing reaches
+LINE until the QC layer has vetted it.
 
 Designed to run as a single step in GitHub Actions (or locally).
 Exits non-zero if any stage fails, so the Actions run shows as failed.
@@ -14,6 +18,7 @@ STEPS = [
     ["python", "agent1_news_reader.py"],
     ["python", "agent2_technical_analyzer.py"],
     ["python", "agent3_signal_synthesizer.py"],
+    ["python", "agent6_qc_reviewer.py"],
     ["python", "agent4_line_notifier.py"],
 ]
 
@@ -29,7 +34,7 @@ def run_step(cmd):
 def main():
     for step in STEPS:
         run_step(step)
-    print("\n=== All 4 agents completed successfully ===")
+    print(f"\n=== All {len(STEPS)} agents completed successfully ===")
 
 
 if __name__ == "__main__":
