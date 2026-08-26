@@ -1,40 +1,31 @@
 {
-  "generated_at": "2026-08-25T01:41:56.240569+00:00",
+  "generated_at": "2026-08-26T01:47:41.226818+00:00",
   "calendar_events_today": [
     {
-      "time": "2026-08-25T10:00:00-04:00",
+      "time": "2026-08-26T08:30:00-04:00",
       "currency": "USD",
-      "title": "CB Consumer Confidence",
+      "title": "Core PCE Price Index m/m",
+      "impact": "High",
+      "forecast": "0.2%",
+      "previous": "0.1%",
+      "actual": null
+    },
+    {
+      "time": "2026-08-26T08:30:00-04:00",
+      "currency": "USD",
+      "title": "Prelim GDP q/q",
+      "impact": "High",
+      "forecast": "1.5%",
+      "previous": "1.5%",
+      "actual": null
+    },
+    {
+      "time": "2026-08-26T08:30:00-04:00",
+      "currency": "USD",
+      "title": "Prelim GDP Price Index q/q",
       "impact": "Medium",
-      "forecast": "90.3",
-      "previous": "90.8",
-      "actual": null
-    },
-    {
-      "time": "2026-08-25T21:30:00-04:00",
-      "currency": "AUD",
-      "title": "CPI m/m",
-      "impact": "High",
-      "forecast": "0.9%",
-      "previous": "-0.1%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-25T21:30:00-04:00",
-      "currency": "AUD",
-      "title": "CPI y/y",
-      "impact": "High",
-      "forecast": "3.3%",
-      "previous": "3.8%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-25T21:30:00-04:00",
-      "currency": "AUD",
-      "title": "Trimmed Mean CPI m/m",
-      "impact": "High",
-      "forecast": "0.4%",
-      "previous": "0.3%",
+      "forecast": "6.2%",
+      "previous": "6.2%",
       "actual": null
     }
   ],
@@ -42,99 +33,99 @@
   "news_headlines": [
     {
       "source": "Investing.com - Forex News",
-      "title": "Canadian dollar slips as trade tensions weigh on loonie",
-      "published": "2026-08-24 20:30:09",
-      "link": "https://www.investing.com/news/forex-news/canadian-dollar-slips-as-trade-tensions-weigh-on-loonie-4874160"
+      "title": "Dollar slips amid bond market rally ahead of PCE, Jackson Hole; loonie rebounds",
+      "published": "2026-08-25 19:58:34",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-dips-as-dollar-rebounds-slightly-iran-sanctions-treasury-yields-in-focus-4874467"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Dollar firms after nearly 1% weekly loss; loonie slides amid rising trade tensions",
-      "published": "2026-08-24 19:16:43",
-      "link": "https://www.investing.com/news/forex-news/asia-fx-rangebound-dollar-holds-near-3mth-lows-amid-us-debt-iran-risks-4872621"
+      "title": "South African rand strengthens despite business conditions drop",
+      "published": "2026-08-25 16:27:22",
+      "link": "https://www.investing.com/news/forex-news/south-african-rand-strengthens-despite-business-conditions-drop-93CH-4875753"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Sterling today: Pound slips as dollar policy jitters, Iran sanctions weigh",
-      "published": "2026-08-24 08:39:58",
-      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-slips-as-dollar-policy-jitters-iran-sanctions-weigh-4872845"
+      "title": "RBI buys net $561 million in forex market in June",
+      "published": "2026-08-25 14:27:15",
+      "link": "https://www.investing.com/news/forex-news/rbi-buys-net-561-million-in-forex-market-in-june-93CH-4875621"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Global bonds freeze as U.S. prepares ’greatest financial offensive’ against Iran",
-      "published": "2026-08-24 08:11:27",
-      "link": "https://www.investing.com/news/forex-news/global-bonds-freeze-as-us-prepares-greatest-financial-offensive-against-iran-4872693"
+      "title": "Global yields stabilize following U.S. sanctions threat and potential cash plan",
+      "published": "2026-08-25 12:06:06",
+      "link": "https://www.investing.com/news/forex-news/global-yields-stabilize-on-toothless-sanctions-threat-and-potential-cash-plan-4874562"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Why does the USD outlook depend on UST and Fed policy credibility?",
-      "published": "2026-08-23 09:15:22",
-      "link": "https://www.investing.com/news/forex-news/why-does-the-usd-outlook-depend-on-ust-and-fed-policy-credibility-4872435"
+      "title": "Can Warsh stop the dollar selling at Jackson Hole?",
+      "published": "2026-08-25 11:34:23",
+      "link": "https://www.investing.com/news/forex-news/can-warsh-stop-the-dollar-selling-at-jackson-hole-4875137"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Sell U.S. dollar versus these currencies, BCA says",
-      "published": "2026-08-23 08:30:07",
-      "link": "https://www.investing.com/news/forex-news/sell-us-dollar-versus-these-currencies-bca-says-4872431"
+      "title": "Sterling today: Pound flat as firmer U.S. Treasuries support dollar",
+      "published": "2026-08-25 10:58:54",
+      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-flat-as-firmer-us-treasuries-support-dollar-4874989"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Will Bessent’s intervention mark a turning point for the yen?",
-      "published": "2026-08-22 20:18:41",
-      "link": "https://www.investing.com/news/forex-news/will-bessents-intervention-mark-a-turning-point-for-the-yen-4872387"
+      "title": "Japan debt-servicing cost to rise 17% to record in next fiscal year, Kyodo reports",
+      "published": "2026-08-25 07:54:31",
+      "link": "https://www.investing.com/news/forex-news/japan-debtservicing-cost-to-rise-17-to-record-in-next-fiscal-year-kyodo-reports-4874592"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Breaking down the U.S.-Japan “currency alliance”",
-      "published": "2026-08-22 05:12:11",
-      "link": "https://www.investing.com/news/forex-news/breaking-down-the-usjapan-currency-alliance-4872302"
+      "title": "Stablecoin card spending forecast to hit $50 billion a year by 2028 - RedotPay",
+      "published": "2026-08-25 07:12:28",
+      "link": "https://www.investing.com/news/forex-news/stablecoin-card-spending-forecast-to-hit-50-billion-a-year-by-2028--redotpay-4874550"
     },
     {
       "source": "FXStreet - News",
-      "title": "WTI holds ground above $84.50 as escalating concerns over US sanctions on Iran",
-      "published": "Tue, 25 Aug 2026 01:35:23 GMT",
-      "link": "https://www.fxstreet.com/news/wti-holds-ground-above-8450-as-escalating-concerns-over-us-sanctions-on-iran-202608250135"
+      "title": "Australian Dollar strengthens after hot CPI report; eyes multi-month high ahead of US PCE",
+      "published": "Wed, 26 Aug 2026 01:47:29 GMT",
+      "link": "https://www.fxstreet.com/news/australian-dollar-strengthens-after-hot-cpi-report-eyes-multi-month-high-ahead-of-us-pce-202608260147"
     },
     {
       "source": "FXStreet - News",
-      "title": "RBA Minutes: Board ready to raise rates if upside risks materialise",
-      "published": "Tue, 25 Aug 2026 01:32:40 GMT",
-      "link": "https://www.fxstreet.com/news/rba-minutes-board-ready-to-raise-rates-if-upside-risks-materialise-202608250132"
+      "title": "Breaking: Australia’s CPI inflation falls to 3.5% YoY in July vs. 3.2% forecast",
+      "published": "Tue, 25 Aug 2026 22:30:00 GMT",
+      "link": "https://www.fxstreet.com/news/australia-cpi-expected-to-show-inflation-easing-in-july-202608252230"
     },
     {
       "source": "FXStreet - News",
-      "title": "Iran’s Economy Minister Madanizadeh: Enemies should wait for an attack",
-      "published": "Tue, 25 Aug 2026 01:28:09 GMT",
-      "link": "https://www.fxstreet.com/news/irans-economy-minister-madanizadeh-enemies-should-wait-for-an-attack-202608250128"
+      "title": "WTI drops amid Middle East diplomacy, eased US sanction fears",
+      "published": "Wed, 26 Aug 2026 01:35:41 GMT",
+      "link": "https://www.fxstreet.com/news/wti-drops-amid-middle-east-diplomacy-eased-us-sanction-fears-202608260135"
     },
     {
       "source": "FXStreet - News",
-      "title": "Japanese Yen consolidates around 159.00 vs USD as bearish potential remains intact",
-      "published": "Tue, 25 Aug 2026 01:16:36 GMT",
-      "link": "https://www.fxstreet.com/news/japanese-yen-consolidates-around-15900-vs-usd-as-bearish-potential-remains-intact-202608250116"
+      "title": "Canadian Dollar weakens amid falling oil prices as USD holds steady ahead of US PCE",
+      "published": "Wed, 26 Aug 2026 01:20:15 GMT",
+      "link": "https://www.fxstreet.com/news/canadian-dollar-weakens-amid-falling-oil-prices-as-usd-holds-steady-ahead-of-us-pce-202608260120"
     },
     {
       "source": "FXStreet - News",
-      "title": "PBOC sets USD/CNY reference rate at 6.7852 vs. 6.7841 previous",
-      "published": "Tue, 25 Aug 2026 01:15:52 GMT",
-      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67852-vs-67841-previous-202608250115"
+      "title": "PBOC sets USD/CNY reference rate at 6.7829 vs. 6.7852 previous",
+      "published": "Wed, 26 Aug 2026 01:15:24 GMT",
+      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67829-vs-67852-previous-202608260115"
     },
     {
       "source": "FXStreet - News",
-      "title": "Euro gains support amid hawkish ECB expectations, subdued US Dollar",
-      "published": "Tue, 25 Aug 2026 01:08:50 GMT",
-      "link": "https://www.fxstreet.com/news/euro-gains-support-amid-hawkish-ecb-expectations-subdued-us-dollar-202608250108"
+      "title": "Euro steadies above 1.1650 ahead of US PCE data",
+      "published": "Wed, 26 Aug 2026 01:03:06 GMT",
+      "link": "https://www.fxstreet.com/news/euro-steadies-above-11650-ahead-of-us-pce-data-202608260103"
     },
     {
       "source": "FXStreet - News",
-      "title": "Australian Dollar falls as Iran sanctions sour risk appetite, RBA minutes eyed",
-      "published": "Mon, 24 Aug 2026 22:58:23 GMT",
-      "link": "https://www.fxstreet.com/news/australian-dollar-falls-as-iran-sanctions-sour-risk-appetite-rba-minutes-eyed-202608242258"
+      "title": "Canada announces 'dollar-for-dollar' retaliatory tariffs up to 50% against US",
+      "published": "Wed, 26 Aug 2026 00:42:28 GMT",
+      "link": "https://www.fxstreet.com/news/canada-announces-dollar-for-dollar-retaliatory-tariffs-up-to-50-against-us-202608260042"
     },
     {
       "source": "FXStreet - News",
-      "title": "Chinese Yuan: Targeting 6.7200 against US Dollar – UOB",
-      "published": "Mon, 24 Aug 2026 22:33:00 GMT",
-      "link": "https://www.fxstreet.com/news/chinese-yuan-targeting-67200-against-us-dollar-uob-202608242233"
+      "title": "Iran and Oman push talks for ‘interim’ reopening of Hormuz — Bloomberg",
+      "published": "Tue, 25 Aug 2026 23:43:09 GMT",
+      "link": "https://www.fxstreet.com/news/iran-and-oman-push-talks-for-interim-reopening-of-hormuz-202608252343"
     }
   ],
   "news_errors": []
