@@ -35,10 +35,15 @@ import json
 import sys
 from datetime import datetime, timedelta, timezone
 
+import scoring
+
 DEFAULT_TOP_N = 3
 DEFAULT_MAX_OPEN = 3
 DEFAULT_COOLDOWN_HOURS = 6
-DEFAULT_MIN_SCORE = 2
+# Float, not int: Agent 2's score is continuous now. The value itself lives in
+# scoring.py next to the measured score distribution that justifies it, so
+# Agent 2, Agent 3 and backtest.py cannot each drift to a different cut.
+DEFAULT_MIN_SCORE = scoring.DEFAULT_MIN_SCORE
 # Stop-loss is capped at this many ATRs from entry, and a signal whose
 # reward/risk falls below DEFAULT_MIN_RR is not published at all.
 DEFAULT_ATR_MULT = 1.5
@@ -86,12 +91,100 @@ def decimals_for_pair(pair: str) -> int:
     return 5
 
 
-def possibility_percent(abs_score: int, risky: bool) -> int:
-    """Turn the rule-based score into a rough confidence percentage (30-95%)."""
-    base = 50 + abs_score * 10  # score 0->50, 1->60, 2->70, 3->80
+CALIBRATION_PATH = "score_calibration.json"
+
+
+def load_calibration(path=CALIBRATION_PATH):
+    """What validate.py measured, or None when no backtest has been run.
+
+    Returns a dict with:
+        points              [(score_midpoint, win_rate_percent), ...] sorted
+        breakeven_win_rate  win rate at which the payoff cancels out
+        edge_significant    is measured expectancy distinguishable from zero
+        expectancy_r / expectancy_t / payoff_ratio   for the QC note
+
+    The file only exists once a backtest has actually been measured, which is
+    the point: before that, the system has no basis for claiming any
+    particular probability, and says so via possibility_calibrated: false.
+
+    Everything past `points` is forwarded untouched to Agent 6. Agent 3 does
+    not gate on any of it - it measures, Agent 6 decides - but the numbers
+    have to ride along on the signal, because Agent 6 must not have to re-open
+    and re-interpret this file to know what the score means.
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+    buckets = data.get("buckets")
+    if not isinstance(buckets, list) or not buckets:
+        return None
+    try:
+        points = sorted((float(b["score_mid"]), float(b["win_rate"])) for b in buckets)
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not points:
+        return None
+    return {
+        "points": points,
+        # Absent in a calibration file written before this field existed. None
+        # (not 0) so Agent 6 can tell "no payoff measured" from "breaks even at
+        # 0%", and fall back to its own floor instead of waving everything past.
+        "breakeven_win_rate": _opt_float(data.get("breakeven_win_rate")),
+        "payoff_ratio": _opt_float(data.get("payoff_ratio")),
+        "expectancy_r": _opt_float(data.get("expectancy_r")),
+        "expectancy_t": _opt_float(data.get("expectancy_t")),
+        # Missing counts as false: a calibration that never measured an edge
+        # has not demonstrated one.
+        "edge_significant": bool(data.get("edge_significant", False)),
+        "trades": data.get("trades"),
+    }
+
+
+def _opt_float(x):
+    """float(x), or None for anything that is not a real number."""
+    try:
+        v = float(x)
+    except (TypeError, ValueError):
+        return None
+    return v if v == v and v not in (float("inf"), float("-inf")) else None
+
+
+def possibility_percent(abs_score: float, risky: bool, calibration=None) -> int:
+    """Confidence percentage for the trade card (30-95%).
+
+    THE OLD VERSION WAS A CONSTANT. It computed 50 + |score| * 10, and since
+    every published signal had |score| == 2 (see scoring.py), every card ever
+    sent to LINE said exactly 70%. It looked like a measured probability and
+    was a decoration.
+
+    With a calibration file present this interpolates the win rate actually
+    observed at that score level, so the number means something. Without one
+    it falls back to a linear map and the signal is stamped
+    possibility_calibrated: false - an admission, not a measurement.
+    """
+    if calibration:
+        # Piecewise-linear between measured bucket midpoints, clamped at the ends.
+        points = calibration["points"] if isinstance(calibration, dict) else calibration
+        xs = [p[0] for p in points]
+        ys = [p[1] for p in points]
+        if abs_score <= xs[0]:
+            base = ys[0]
+        elif abs_score >= xs[-1]:
+            base = ys[-1]
+        else:
+            i = next(i for i in range(len(xs) - 1) if xs[i] <= abs_score <= xs[i + 1])
+            span = xs[i + 1] - xs[i]
+            frac = 0.0 if span <= 0 else (abs_score - xs[i]) / span
+            base = ys[i] + frac * (ys[i + 1] - ys[i])
+    else:
+        # score 0 -> 50%, 3 -> 80%. Same slope as before, now continuous.
+        base = 50 + abs_score * 10
+
     if risky:
         base -= 15
-    return max(30, min(base, 95))
+    return int(max(30, min(round(base), 95)))
 
 
 def build_trade_levels(action: str, entry: float, support: float, resistance: float, ndigits: int,
@@ -154,11 +247,14 @@ def risk_reward(entry: float, tp3: float, sl: float):
     return abs(tp3 - entry) / risk
 
 
-def build_signal(candidate, time_frame, atr_mult=DEFAULT_ATR_MULT):
+def build_signal(candidate, time_frame, atr_mult=DEFAULT_ATR_MULT, calibration=None):
     """Turn one ranked candidate into a full trade card."""
-    if candidate["abs_score"] < 2:
+    # Bands, not equality: the score is a float now, so the old
+    # `abs_score == 2` test for "medium" would essentially never fire.
+    abs_score = candidate["abs_score"]
+    if abs_score < 2.0:
         confidence = "low"
-    elif candidate["abs_score"] == 2:
+    elif abs_score < 2.5:
         confidence = "medium"
     else:
         confidence = "high"
@@ -179,15 +275,36 @@ def build_signal(candidate, time_frame, atr_mult=DEFAULT_ATR_MULT):
         "action": action,
         "direction": candidate["bias"],
         "confidence": confidence,
-        "possibility_percent": possibility_percent(candidate["abs_score"], candidate["risky_pending_news"]),
-        "score": candidate["score"],
+        "possibility_percent": possibility_percent(abs_score, candidate["risky_pending_news"],
+                                                   calibration=calibration),
+        # False means the percentage above is a linear guess, not a measured
+        # win rate. Run validate.py to produce score_calibration.json.
+        "possibility_calibrated": bool(calibration),
+        # What the measurement says about the strategy as a whole, forwarded
+        # for Agent 6's gate. possibility_percent alone cannot answer "is this
+        # trade worth taking": a 44% win rate is a loss at a 1.1:1 payoff and a
+        # fortune at 3:1, so the payoff has to travel with the percentage.
+        "calibration": {
+            "breakeven_win_rate": calibration.get("breakeven_win_rate"),
+            "payoff_ratio": calibration.get("payoff_ratio"),
+            "expectancy_r": calibration.get("expectancy_r"),
+            "expectancy_t": calibration.get("expectancy_t"),
+            "edge_significant": calibration.get("edge_significant", False),
+            "trades": calibration.get("trades"),
+        } if isinstance(calibration, dict) else None,
+        "score": round(candidate["score"], 4),
+        # Which components drove this read, carried from Agent 2 so the live
+        # signals can be IC-tested the same way the backtest is.
+        "components": candidate.get("components") or {},
         "status": "Active" if action != "Wait" else "No Trade",
         "opening_time": now_utc.strftime("%Y-%m-%d %H:%M UTC"),
         "last_update": now_utc.strftime("%Y-%m-%d %H:%M UTC"),
         "open_price": round(candidate["last_close"], ndigits),
         "time_frame": time_frame,
         # How stale the candle behind open_price is, so the LINE card can say
-        # "priced off a 15m bar that closed 4 min ago" instead of hiding it.
+        # "priced off a 1h bar that closed 40 min ago" instead of hiding it.
+        # This matters more than it used to: the interval moved from 15m to 1h
+        # (see scoring.DEFAULT_INTERVAL), so this number can now reach ~60.
         "last_bar_time": candidate.get("last_bar_time"),
         "data_age_minutes": candidate.get("data_age_minutes"),
         "profit_loss": "Waiting",
@@ -206,7 +323,7 @@ def build_signal(candidate, time_frame, atr_mult=DEFAULT_ATR_MULT):
 
 
 def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_SCORE,
-               min_rr=DEFAULT_MIN_RR, atr_mult=DEFAULT_ATR_MULT):
+               min_rr=DEFAULT_MIN_RR, atr_mult=DEFAULT_ATR_MULT, calibration=None):
     pending_currencies = pending_high_impact_currencies(news_data)
     time_frame = tech_data.get("interval", "?")
 
@@ -231,6 +348,7 @@ def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_
             "atr14": result.get("atr14"),
             "last_bar_time": result.get("last_bar_time"),
             "data_age_minutes": result.get("data_age_minutes"),
+            "components": result.get("components"),
         })
 
     if not candidates:
@@ -255,7 +373,7 @@ def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_
     # actually gets published — not just the indicator score.
     signals, rejected = [], []
     for candidate in tradable:
-        signal = build_signal(candidate, time_frame, atr_mult=atr_mult)
+        signal = build_signal(candidate, time_frame, atr_mult=atr_mult, calibration=calibration)
         rr = signal.get("risk_reward")
         if min_rr > 0 and (rr is None or rr < min_rr):
             rejected.append({
@@ -272,7 +390,8 @@ def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_
     if not signals and not tradable:
         # Nothing cleared the score bar — surface the strongest read anyway so
         # the run still reports what the market looks like.
-        signals = [build_signal(pool_sorted[0], time_frame, atr_mult=atr_mult)]
+        signals = [build_signal(pool_sorted[0], time_frame, atr_mult=atr_mult,
+                                calibration=calibration)]
 
     return {
         "signals": signals,
@@ -364,8 +483,12 @@ def main():
                          help="How many signals to publish per run")
     parser.add_argument("--max-open", type=int, default=DEFAULT_MAX_OPEN,
                          help="Cap on simultaneously open trades across all runs")
-    parser.add_argument("--min-score", type=int, default=DEFAULT_MIN_SCORE,
-                         help="Minimum |technical score| for a pair to be publishable")
+    parser.add_argument("--min-score", type=float, default=DEFAULT_MIN_SCORE,
+                         help="Minimum |technical score| for a pair to be publishable "
+                              "(score is continuous in -3..+3 - see scoring.py)")
+    parser.add_argument("--calibration", default=CALIBRATION_PATH,
+                         help="Score-to-win-rate table from validate.py; without it "
+                              "possibility_percent is an uncalibrated guess")
     parser.add_argument("--min-rr", type=float, default=DEFAULT_MIN_RR,
                          help="Drop signals whose reward/risk is below this (0 disables the filter)")
     parser.add_argument("--atr-mult", type=float, default=DEFAULT_ATR_MULT,
@@ -381,8 +504,13 @@ def main():
         print("[error] technical analysis data is required to synthesize a signal", file=sys.stderr)
         sys.exit(1)
 
+    calibration = load_calibration(args.calibration)
+    if calibration is None:
+        print(f"[warn] no calibration at {args.calibration} - possibility_percent will be "
+              f"a linear guess, not a measured win rate. Run validate.py to build one.",
+              file=sys.stderr)
     result = synthesize(news_data, tech_data, top_n=args.top, min_score=args.min_score,
-                        min_rr=args.min_rr, atr_mult=args.atr_mult)
+                        min_rr=args.min_rr, atr_mult=args.atr_mult, calibration=calibration)
     generated_at = datetime.now(timezone.utc).isoformat()
 
     # Decide which signals are actually new *before* writing signal.json, so
