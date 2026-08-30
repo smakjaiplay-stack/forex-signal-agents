@@ -2,7 +2,8 @@
 Agent 5 - Price Watcher
 =========================
 Watches every open trade in open_trade.json (written by Agent 3, which can
-publish several pairs per run) against live intraday price data, applies the
+publish several pairs per run, then pruned by Agent 6's QC layer of anything
+it blocked before it reached LINE) against live intraday price data, applies the
 same TP1/TP2/TP3 trailing stop-loss rule that backtest.py simulates
 (breakeven after TP1, TP1-level after TP2, close at TP3), and sends a LINE
 alert plus updates open_trade.json whenever a level is crossed.

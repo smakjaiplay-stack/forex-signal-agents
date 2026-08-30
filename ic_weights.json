@@ -1,0 +1,23 @@
+{
+  "source": "backtest_trades.json",
+  "trades": 1312,
+  "note": "Negative-IC components are halved, not zeroed. NOT applied unless you pass --use-ic-weights; read scoring.py first.",
+  "ic": {
+    "htf_align": 0.07295,
+    "ema_sep": 0.01769,
+    "rsi_extreme": 0.01171,
+    "di_spread": -0.00045,
+    "macd_hist": -0.00363,
+    "rsi_dev": -0.00886,
+    "range_pos": -0.01898
+  },
+  "weights": {
+    "htf_align": 1.0,
+    "ema_sep": 1.0,
+    "rsi_extreme": 1.0,
+    "di_spread": 0.5,
+    "macd_hist": 0.5,
+    "rsi_dev": 0.5,
+    "range_pos": 0.5
+  }
+}

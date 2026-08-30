@@ -1,0 +1,79 @@
+{
+  "source": "backtest_trades.json",
+  "trades": 1312,
+  "note": "Maps |score| to the win rate AND the average R observed at that score. Agent 3 reads this so possibility_percent is a measurement rather than a linear guess; Agent 6 reads breakeven_win_rate so its confidence floor is derived from the measured payoff instead of being a hand-picked number.",
+  "win_rate": 44.13,
+  "avg_win_r": 0.7809,
+  "avg_loss_r": -0.6832,
+  "payoff_ratio": 1.143,
+  "breakeven_win_rate": 46.66,
+  "expectancy_r": -0.0357,
+  "expectancy_t": -1.442,
+  "expectancy_ci": [
+    -0.0842,
+    0.0128
+  ],
+  "edge_significant": false,
+  "buckets": [
+    {
+      "score_mid": 1.3567,
+      "win_rate": 42.74,
+      "avg_r": -0.1282,
+      "n": 131
+    },
+    {
+      "score_mid": 1.5698,
+      "win_rate": 42.86,
+      "avg_r": -0.0284,
+      "n": 131
+    },
+    {
+      "score_mid": 1.6975,
+      "win_rate": 37.4,
+      "avg_r": -0.1292,
+      "n": 131
+    },
+    {
+      "score_mid": 1.7737,
+      "win_rate": 52.38,
+      "avg_r": 0.0167,
+      "n": 131
+    },
+    {
+      "score_mid": 1.8259,
+      "win_rate": 43.31,
+      "avg_r": 0.0464,
+      "n": 132
+    },
+    {
+      "score_mid": 1.862,
+      "win_rate": 35.66,
+      "avg_r": -0.1398,
+      "n": 131
+    },
+    {
+      "score_mid": 1.8892,
+      "win_rate": 48.8,
+      "avg_r": 0.0068,
+      "n": 131
+    },
+    {
+      "score_mid": 1.9126,
+      "win_rate": 45.6,
+      "avg_r": 0.0513,
+      "n": 131
+    },
+    {
+      "score_mid": 1.937,
+      "win_rate": 47.54,
+      "avg_r": -0.015,
+      "n": 131
+    },
+    {
+      "score_mid": 1.9686,
+      "win_rate": 45.6,
+      "avg_r": -0.038,
+      "n": 132
+    }
+  ]
+}
