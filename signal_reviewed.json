@@ -3,7 +3,7 @@
   "signals": [
     {
       "pair": "USDJPY",
-      "action": "Buy",
+      "action": "Wait",
       "direction": "bullish",
       "confidence": "low",
       "possibility_percent": 35,
@@ -26,7 +26,7 @@
         "htf_align": 0.9905,
         "range_pos": 0.7002
       },
-      "status": "Active",
+      "status": "No Trade",
       "opening_time": "2026-08-30 15:08 UTC",
       "last_update": "2026-08-30 15:08 UTC",
       "open_price": 160.038,
@@ -57,11 +57,21 @@
       "risk_reward_tp1": 1.0,
       "risk_reward": 2.99,
       "atr14": 0.1332,
-      "new": true
+      "new": true,
+      "qc_status": "downgraded",
+      "qc_flags": [
+        "unproven_edge",
+        "stale_price"
+      ],
+      "qc_notes": "no measurable edge (expectancy 0.0043R, t=0.127 over 1535 trades) — published anyway under --allow-unproven-edge to collect live samples; entry price is from a bar 2588 min old (limit 75 min for this interval) — action forced to Wait",
+      "original_action": "Buy",
+      "final_action": "Wait",
+      "qc_risk_reward_tp1": 1.0,
+      "qc_reviewed_at": "2026-08-30T15:08:12.040660+00:00"
     },
     {
       "pair": "USDCAD",
-      "action": "Buy",
+      "action": "Wait",
       "direction": "bullish",
       "confidence": "low",
       "possibility_percent": 34,
@@ -84,7 +94,7 @@
         "htf_align": 0.5274,
         "range_pos": 0.774
       },
-      "status": "Active",
+      "status": "No Trade",
       "opening_time": "2026-08-30 15:08 UTC",
       "last_update": "2026-08-30 15:08 UTC",
       "open_price": 1.3902,
@@ -115,11 +125,21 @@
       "risk_reward_tp1": 1.0,
       "risk_reward": 3.0,
       "atr14": 0.00132,
-      "new": true
+      "new": true,
+      "qc_status": "downgraded",
+      "qc_flags": [
+        "unproven_edge",
+        "stale_price"
+      ],
+      "qc_notes": "no measurable edge (expectancy 0.0043R, t=0.127 over 1535 trades) — published anyway under --allow-unproven-edge to collect live samples; entry price is from a bar 2468 min old (limit 75 min for this interval) — action forced to Wait",
+      "original_action": "Buy",
+      "final_action": "Wait",
+      "qc_risk_reward_tp1": 1.0,
+      "qc_reviewed_at": "2026-08-30T15:08:12.040660+00:00"
     },
     {
       "pair": "GBPUSD",
-      "action": "Sell",
+      "action": "Wait",
       "direction": "bearish",
       "confidence": "low",
       "possibility_percent": 33,
@@ -142,7 +162,7 @@
         "htf_align": -0.0265,
         "range_pos": -0.7205
       },
-      "status": "Active",
+      "status": "No Trade",
       "opening_time": "2026-08-30 15:08 UTC",
       "last_update": "2026-08-30 15:08 UTC",
       "open_price": 1.35375,
@@ -172,12 +192,22 @@
       "risk_reward_tp1": 1.0,
       "risk_reward": 3.0,
       "atr14": 0.00108,
-      "new": true
+      "new": true,
+      "qc_status": "downgraded",
+      "qc_flags": [
+        "unproven_edge",
+        "stale_price"
+      ],
+      "qc_notes": "no measurable edge (expectancy 0.0043R, t=0.127 over 1535 trades) — published anyway under --allow-unproven-edge to collect live samples; entry price is from a bar 2528 min old (limit 75 min for this interval) — action forced to Wait",
+      "original_action": "Sell",
+      "final_action": "Wait",
+      "qc_risk_reward_tp1": 1.0,
+      "qc_reviewed_at": "2026-08-30T15:08:12.040660+00:00"
     }
   ],
   "signal": {
     "pair": "USDJPY",
-    "action": "Buy",
+    "action": "Wait",
     "direction": "bullish",
     "confidence": "low",
     "possibility_percent": 35,
@@ -200,7 +230,7 @@
       "htf_align": 0.9905,
       "range_pos": 0.7002
     },
-    "status": "Active",
+    "status": "No Trade",
     "opening_time": "2026-08-30 15:08 UTC",
     "last_update": "2026-08-30 15:08 UTC",
     "open_price": 160.038,
@@ -231,7 +261,17 @@
     "risk_reward_tp1": 1.0,
     "risk_reward": 2.99,
     "atr14": 0.1332,
-    "new": true
+    "new": true,
+    "qc_status": "downgraded",
+    "qc_flags": [
+      "unproven_edge",
+      "stale_price"
+    ],
+    "qc_notes": "no measurable edge (expectancy 0.0043R, t=0.127 over 1535 trades) — published anyway under --allow-unproven-edge to collect live samples; entry price is from a bar 2588 min old (limit 75 min for this interval) — action forced to Wait",
+    "original_action": "Buy",
+    "final_action": "Wait",
+    "qc_risk_reward_tp1": 1.0,
+    "qc_reviewed_at": "2026-08-30T15:08:12.040660+00:00"
   },
   "rejected": [],
   "rejected_low_rr": [],
@@ -523,5 +563,28 @@
         "range_pos": -0.6337
       }
     }
-  ]
+  ],
+  "qc": {
+    "reviewed_at": "2026-08-30T15:08:12.040660+00:00",
+    "qc_status": "downgraded",
+    "counts": {
+      "approved": 0,
+      "downgraded": 3,
+      "blocked": 0
+    },
+    "stale_data": false,
+    "stale_notes": [],
+    "news_unverified": false,
+    "news_unverified_note": null,
+    "imminent_high_impact_currencies": [],
+    "thresholds": {
+      "min_possibility_percent": 60,
+      "min_risk_reward_tp1": 1.0,
+      "max_risk_reward_tp1": 3.0,
+      "news_window_minutes": 120,
+      "max_data_age_minutes": 30,
+      "max_bar_age_minutes": 75
+    }
+  },
+  "qc_status": "downgraded"
 }

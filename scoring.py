@@ -57,6 +57,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 from typing import Optional
 
 import numpy as np
@@ -93,20 +94,22 @@ SCALES = {
 # The score is rescaled to +/-3 so it stays in the same range as the old
 # -3..+3 vote score. Note that the ENDS of that range are not reachable in
 # practice: it would take all seven components saturating at once, and
-# rsi_extreme alone is 0 whenever RSI sits between 30 and 70. Measured over
-# 5,049 scored bars of 1h history the distribution came out:
+# rsi_extreme alone is 0 whenever RSI sits between 30 and 70. Re-measured over
+# all 145,969 scored bars of 1h history across the nine pairs, after range_pos
+# moved from close-only to low/high bounds:
 #
-#     p50 0.79   p75 1.27   p90 1.71   p95 1.84   max 2.02
+#     p50 0.758   p75 1.218   p90 1.651   p95 1.792   p99 1.905   max 2.044
 #
-# which is why the threshold below is 1.2 and not 2. A 2.0 cut let through
-# 4 bars out of 5,049 - three trades in two years, and nothing to measure.
+# which is why the threshold below is 1.2 and not 2. A 2.0 cut clears the 99th
+# percentile by a distance - a handful of bars in two years, nothing to measure.
 SCORE_SCALE = 3.0
 
-# Chosen at roughly the 75th percentile of that distribution, on the grounds
-# that it yields a trade count comparable to the old rule's 522 - i.e. picked
-# for SAMPLE SIZE, deliberately not for returns. Tuning this number until the
-# backtest looks good is precisely the overfitting the validate.py report
-# exists to catch.
+# The 75th percentile of that distribution, on the grounds that it yields a
+# trade count comparable to the old rule's 522 - i.e. picked for SAMPLE SIZE,
+# deliberately not for returns. Tuning this number until the backtest looks
+# good is precisely the overfitting the validate.py report exists to catch.
+# It survived the range_pos change untouched rather than being re-tuned to fit:
+# p75 came back at 1.218, so 1.2 is still the same percentile it always was.
 DEFAULT_MIN_SCORE = 1.2
 
 # ---------------------------------------------------------------------------
@@ -141,6 +144,127 @@ DEFAULT_LIVE_PERIOD = "60d"
 # interval ever changes, which is why it lives here next to the interval and
 # not as a bare 24 in backtest.py's argparse.
 BARS_PER_DAY = 24
+
+# How often the live pipeline gets to open a trade: the Actions cron is
+# "7 */4 * * 1-5", so every 4 hours.
+#
+# This is a SEPARATE quantity from the hold window above, and backtest.py used
+# to run both off one --bars-per-day argument. The checked-in calibration was
+# generated with --bars-per-day 4 to match the 4-hourly cron, which silently
+# also cut the maximum hold from 24 bars to 4: every one of the 1,312 trades
+# behind score_calibration.json was a four-hour trade, measuring a system that
+# holds for twenty-four. One parameter, two meanings, no way to notice.
+LIVE_RUN_INTERVAL_HOURS = 4
+
+
+def decision_every_bars(interval: str = None) -> int:
+    """Bars between live decision points, for the backtest to replay."""
+    minutes = interval_minutes(interval)
+    if not minutes:
+        return 1
+    return max(1, (LIVE_RUN_INTERVAL_HOURS * 60) // minutes)
+
+# ---------------------------------------------------------------------------
+# TRADE GEOMETRY - where the stop and the targets go
+# ---------------------------------------------------------------------------
+# These used to live in agent3_signal_synthesizer.py, and the stop/target rule
+# itself was: target = the 50-bar range edge, stop = the opposite edge, capped
+# at ATR * 1.5. It was measured, and it did not work the way anyone assumed.
+#
+# WHAT THE MEASUREMENT SHOWED (502 entries, 1h bars, 730d, 9 pairs)
+# -----------------------------------------------------------------
+# support/resistance were the rolling 50-bar min/max OF THE CLOSE, and the
+# entry price IS the latest close. A high |score| selects trend setups, and a
+# trend setup's latest close is at or beyond its own 50-bar extreme - so the
+# `support < entry < resistance` guard failed on 42% of entries, dropping them
+# into a fallback branch documented as being for "thin/odd data" that placed
+# the target at a flat 1.5% of price.
+#
+#     TP3 distance, structure branch: median 0.51 ATR   (range edge is CLOSE)
+#     TP3 distance, fallback branch:  median 10.16 ATR  (1.5% of price is FAR)
+#
+# The reward/risk filter then finished the job. At min_rr 1.5 measured on TP3,
+# 3 of 290 structure-branch setups survived and 212 of 212 fallback setups did:
+#
+#     98.6% of every trade this project has ever measured came out of the
+#     fallback branch - a hardcoded percentage of price, with no relationship
+#     to the pair, its volatility, or its structure.
+#
+# So backtest_trades.json, score_calibration.json and ic_weights.json were all
+# describing an accident, and the "R:R 28.4" on the LINE cards was that accident
+# quoted as a feature.
+#
+# WHAT REPLACED IT
+# ----------------
+# The stop is ATR-scaled and nothing else, and the targets are multiples of the
+# risk. The range edge is no longer part of the geometry at all - at a median
+# 0.51 ATR from entry it is not a usable stop or target reference, it is noise.
+# Consequences, all deliberate:
+#   - reward/risk is now a stated constant (1:1 to TP1, 3:1 to TP3) instead of
+#     an accident of which branch fired, so it cannot select trades any more.
+#     Agent 6's rule 3 checks the geometry is intact rather than gating on it.
+#   - a signal with no ATR is not publishable. There is no honest way to size a
+#     stop without a volatility estimate, and inventing one is what the
+#     fallback branch did.
+#
+# WHY THESE NUMBERS AND NOT BETTER ONES
+# -------------------------------------
+# Max favorable and max adverse excursion over the 24-bar hold, in ATRs:
+#
+#     distance   0.5x    1.0x    1.5x    2.0x    2.5x    3.0x
+#     favorable  87.3%   74.7%   63.9%   53.2%   41.4%   34.9%
+#     adverse    87.8%   74.1%   63.1%   52.8%   42.2%   35.9%
+#
+# The two rows are the same row. At every distance price is as likely to reach
+# the target as the stop, which is what "no measurable edge" looks like in the
+# raw bars, and it means no choice of geometry manufactures one. SL_ATR_MULT is
+# therefore kept at the 1.5 the old code already used - changing it would be
+# picking a number the data does not support - and the targets are round
+# R-multiples so the card can state the ratio honestly.
+SL_ATR_MULT = 1.5
+
+# TP1/TP2/TP3 as multiples of the risk. TP1 = 1R is the one most trades reach
+# and the one Agent 6 gates on; TP3 = 3R is the stretch the trailing stop is
+# working toward.
+TP_R_MULTS = (1.0, 2.0, 3.0)
+
+# Agent 3 built its levels with one number and Agent 6 gated on another that
+# happened to share the value 1.5 while measuring a different quantity: Agent 3
+# checked entry->TP3 and Agent 6 checked entry->TP1, which is TP3/3 by
+# construction, so Agent 6's bar was silently three times the stricter. One
+# definition now, measured entry->TP1, and both import it.
+MIN_RR_TP1 = TP_R_MULTS[0]
+
+# Above this, the levels are not merely generous - they are broken. The old
+# fallback branch published cards reading "R:R 28.4"; anything near that means
+# the geometry has come apart again, and Agent 6 blocks rather than warns.
+MAX_RR_TP1 = TP_R_MULTS[0] * 3.0
+
+# The stop may never be closer to the entry than this many ATRs. Nothing
+# currently narrows it, but a stop that collapses onto the entry price is a
+# trade that stops out on the spread, so the floor is enforced rather than
+# assumed.
+MIN_SL_ATR_MULT = 0.25
+
+
+def interval_minutes(interval: str = None) -> Optional[int]:
+    """Bar length in minutes, or None for anything unrecognised.
+
+    Agent 6 needs this to judge whether the price on a card is stale: on 1h
+    bars an entry can legitimately be up to an hour behind the market, and the
+    same delay on 15m bars would mean the pipeline is running late. The limit
+    has to be derived from the interval rather than typed in, because the
+    interval has already moved once (15m -> 1h) and took every hardcoded
+    assumption about freshness with it.
+    """
+    interval = (interval or DEFAULT_INTERVAL).strip().lower()
+    match = re.fullmatch(r"(\d+)(m|h|d|wk|mo)", interval)
+    if not match:
+        return None
+    size, unit = int(match.group(1)), match.group(2)
+    factors = {"m": 1, "h": 60, "d": 60 * 24, "wk": 60 * 24 * 7, "mo": 60 * 24 * 30}
+    return size * factors[unit]
+
 
 IC_WEIGHTS_PATH = os.environ.get("IC_WEIGHTS_PATH", "ic_weights.json")
 
@@ -244,6 +368,13 @@ def component_values(*, close: float, ema20: float, ema50: float, ema80: float,
     # Where price sits in its 50-bar range: -1 at support, +1 at resistance.
     # Signed as momentum (high in range = bullish). Whether that or the
     # contrarian reading is right is for the IC report to say.
+    #
+    # The range is the 50-bar low/high, not the rolling min/max of the CLOSE it
+    # used to be. Against close-only bounds the entry price - itself the latest
+    # close - sat exactly on one edge whenever the trend was making new ground,
+    # so this component pinned to exactly +/-1 on 14.5% of bars (21,214 of
+    # 146,029 measured) and carried no information on precisely the setups a
+    # high score selects. Against low/high bounds that drops to 0.8%.
     span = resistance - support
     vals["range_pos"] = 0.0 if span <= 0 else \
         max(-1.0, min(1.0, 2.0 * (close - support) / span - 1.0))

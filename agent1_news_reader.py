@@ -5,6 +5,14 @@ Pulls today's high/medium-impact forex economic calendar events (ForexFactory
 public calendar feed) plus recent forex news headlines (RSS), and writes a
 structured JSON summary that Agent 3 (Signal Synthesizer) can consume.
 
+A failed fetch is reported as a failure, not as an absence. This file used to
+write a well-formed news_summary.json with a fresh timestamp whether or not
+ForexFactory answered, so a calendar outage and a genuinely quiet news day were
+indistinguishable downstream - and Agent 6's news rule, reading only
+`calendar_events_today`, passed both. The calendar error now travels with the
+data (Agent 6 reads it as "news_unverified"), and a run where nothing at all
+could be fetched exits non-zero.
+
 Usage:
     python agent1_news_reader.py
     python agent1_news_reader.py --impact high medium --out news_summary.json
@@ -16,6 +24,7 @@ Output:
 import argparse
 import json
 import sys
+import time
 from datetime import datetime, timezone
 
 import feedparser
@@ -32,15 +41,37 @@ NEWS_FEEDS = {
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (forex-signal-agent/1.0)"}
 
+# One transient blip on a free public feed should not cost the run its news
+# check, and this job runs six times a day - a couple of seconds of backoff is
+# cheaper than a signal published without knowing what is on the calendar.
+FETCH_ATTEMPTS = 3
+FETCH_BACKOFF_SECONDS = 2.0
 
-def fetch_calendar_events(impact_filter):
-    """Fetch today's economic calendar events filtered by impact level."""
-    try:
-        resp = requests.get(FF_CALENDAR_URL, headers=HEADERS, timeout=15)
-        resp.raise_for_status()
-        events = resp.json()
-    except Exception as e:
-        return [], f"calendar fetch failed: {e}"
+
+def fetch_calendar_events(impact_filter, attempts=FETCH_ATTEMPTS,
+                          backoff=FETCH_BACKOFF_SECONDS, sleep=time.sleep):
+    """Fetch today's economic calendar events filtered by impact level.
+
+    Returns (events, error). A non-None error is not cosmetic: Agent 6 reads it
+    and treats the pair as if a release could be pending, because an
+    unreadable calendar cannot rule one out.
+    """
+    events = None
+    last_error = None
+    for attempt in range(1, attempts + 1):
+        try:
+            resp = requests.get(FF_CALENDAR_URL, headers=HEADERS, timeout=15)
+            resp.raise_for_status()
+            events = resp.json()
+            break
+        except Exception as e:
+            last_error = e
+            if attempt < attempts:
+                print(f"[retry] calendar fetch attempt {attempt}/{attempts} failed: {e}",
+                      file=sys.stderr)
+                sleep(backoff * attempt)
+    if events is None:
+        return [], f"calendar fetch failed after {attempts} attempts: {last_error}"
 
     today = datetime.now(timezone.utc).date()
     todays_events = []
@@ -67,13 +98,23 @@ def fetch_calendar_events(impact_filter):
     return todays_events, None
 
 
-def fetch_news_headlines(max_per_feed=8):
-    """Fetch recent headlines from configured RSS feeds."""
+def fetch_news_headlines(max_per_feed=8, attempts=FETCH_ATTEMPTS,
+                         backoff=FETCH_BACKOFF_SECONDS, sleep=time.sleep):
+    """Fetch recent headlines from configured RSS feeds.
+
+    Each feed is retried on its own: one dead source should not cost the others.
+    """
     headlines = []
     errors = []
     for source, url in NEWS_FEEDS.items():
         try:
-            feed = feedparser.parse(url)
+            feed = None
+            for attempt in range(1, attempts + 1):
+                feed = feedparser.parse(url)
+                if feed.entries:
+                    break
+                if attempt < attempts:
+                    sleep(backoff * attempt)
             if feed.bozo and not feed.entries:
                 errors.append(f"{source}: {feed.bozo_exception}")
                 continue
@@ -119,8 +160,19 @@ def main():
 
     if cal_error:
         print(f"[warn] {cal_error}", file=sys.stderr)
+        print("[warn] Agent 6 will flag every signal news_unverified this run.",
+              file=sys.stderr)
     for err in news_errors:
         print(f"[warn] {err}", file=sys.stderr)
+
+    # Partial failure is survivable and stays exit 0 - the calendar error is
+    # carried in the file and Agent 6 acts on it. Total failure is not: it means
+    # this stage produced nothing, and a pipeline that reports success on that
+    # is how "no events today" came to mean "we never looked".
+    if cal_error and not headlines:
+        print("[error] neither the economic calendar nor any news feed could be read.",
+              file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

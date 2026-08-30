@@ -28,10 +28,26 @@ import argparse
 import json
 import os
 import sys
+import time
 
 import requests
 
 LINE_BROADCAST_URL = "https://api.line.me/v2/bot/message/broadcast"
+
+# LINE rejects a text message over 5000 characters and accepts at most 5
+# message objects per request. Three cards with QC warnings attached had no
+# trouble fitting; three cards, three QC warnings and a run of long event
+# titles is another matter, and the failure mode was a 400 that dropped the
+# whole broadcast rather than one long card.
+LINE_MAX_TEXT_CHARS = 5000
+LINE_MAX_MESSAGES = 5
+# Leave room for the "(1/3)" continuation marker.
+CHUNK_CHARS = LINE_MAX_TEXT_CHARS - 100
+
+# Transient failures worth another attempt: LINE's own rate limit and any 5xx.
+RETRY_STATUS = {429, 500, 502, 503, 504}
+RETRY_ATTEMPTS = 3
+RETRY_BACKOFF_SECONDS = 2.0
 
 
 def build_signal_block(signal: dict) -> list:
@@ -61,8 +77,23 @@ def build_signal_block(signal: dict) -> list:
             f"TP1: {signal.get('take_profit_1')}  |  TP2: {signal.get('take_profit_2')}"
             f"  |  TP3: {signal.get('take_profit_3')}"
         )
-        rr = signal.get("risk_reward")
-        lines.append(f"SL: {signal.get('stop_loss')}" + (f"  |  R:R {rr}" if rr else ""))
+        # R:R to TP1 leads, TP3 follows as the stretch.
+        #
+        # The card used to quote the TP3 ratio alone, and under the old level
+        # rule that number reached 28.4 while TP3 was being hit on 1.9% of
+        # trades. Leading with a ratio for an outcome that almost never happens
+        # is the same class of decoration as the constant 70% possibility this
+        # project already removed.
+        rr1 = signal.get("risk_reward_tp1")
+        rr3 = signal.get("risk_reward")
+        sl_line = f"SL: {signal.get('stop_loss')}"
+        if rr1:
+            sl_line += f"  |  R:R {rr1} to TP1"
+            if rr3:
+                sl_line += f" ({rr3} to TP3)"
+        elif rr3:
+            sl_line += f"  |  R:R {rr3} to TP3"
+        lines.append(sl_line)
 
     lines.append(f"Support: {signal.get('support')} | Resistance: {signal.get('resistance')}")
 
@@ -111,6 +142,18 @@ def build_qc_warning(signal: dict) -> list:
             "strategy. This card is being sent to collect live samples. Size accordingly."
         )
 
+    if "stale_price" in signal.get("qc_flags", []):
+        lines.append(
+            "   🕒 STALE PRICE — the entry above is older than one bar of this "
+            "timeframe. Re-check the live quote before acting."
+        )
+
+    if "news_unverified" in signal.get("qc_flags", []):
+        lines.append(
+            "   📰 NEWS NOT CHECKED — the economic calendar could not be fetched, "
+            "so a pending high-impact release cannot be ruled out."
+        )
+
     original_possibility = signal.get("original_possibility_percent")
     if original_possibility is not None:
         lines.append(
@@ -155,17 +198,78 @@ def build_message_text(signal_data: dict, signals: list) -> str:
     return "\n".join(blocks)
 
 
-def send_broadcast(token: str, text: str):
+def split_for_line(text: str, chunk_chars: int = CHUNK_CHARS,
+                   max_messages: int = LINE_MAX_MESSAGES):
+    """Split a message on card boundaries so LINE will accept it.
+
+    Splits on the "─────" separator between cards first, so a card is never
+    torn in half, and only falls back to a hard cut for a single card that is
+    somehow longer than the limit on its own. Anything past `max_messages` is
+    dropped with a line saying so - silently sending the first five sixths of
+    a run would be worse than saying five sixths is all that fits.
+    """
+    if len(text) <= chunk_chars:
+        return [text]
+
+    chunks, current = [], ""
+    for block in text.split("\n─────────────"):
+        block = block if not chunks and not current else "\n─────────────" + block
+        if current and len(current) + len(block) > chunk_chars:
+            chunks.append(current)
+            current = block.lstrip("\n")
+        else:
+            current += block
+    if current:
+        chunks.append(current)
+
+    # A single oversized card: cut it rather than let LINE reject the request.
+    final = []
+    for chunk in chunks:
+        while len(chunk) > chunk_chars:
+            final.append(chunk[:chunk_chars])
+            chunk = chunk[chunk_chars:]
+        final.append(chunk)
+
+    if len(final) > max_messages:
+        dropped = len(final) - max_messages
+        final = final[:max_messages]
+        final[-1] += f"\n\n… {dropped} more message(s) did not fit and were not sent."
+
+    total = len(final)
+    return [f"({i}/{total})\n{c}" for i, c in enumerate(final, 1)]
+
+
+def send_broadcast(token: str, text: str, attempts: int = RETRY_ATTEMPTS,
+                   backoff: float = RETRY_BACKOFF_SECONDS, sleep=time.sleep):
+    """Broadcast one message, retrying the failures that are worth retrying.
+
+    A 429 or a 5xx is LINE having a moment; a 400 or a 401 is this code or the
+    token being wrong, and retrying those just sends the same broken request
+    three times. The response of the last attempt is returned either way, so
+    the caller still reports the real status.
+    """
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {token}",
     }
-    payload = {
-        "messages": [
-            {"type": "text", "text": text}
-        ]
-    }
-    resp = requests.post(LINE_BROADCAST_URL, headers=headers, json=payload, timeout=15)
+    payload = {"messages": [{"type": "text", "text": text}]}
+
+    resp = None
+    for attempt in range(1, attempts + 1):
+        try:
+            resp = requests.post(LINE_BROADCAST_URL, headers=headers, json=payload, timeout=15)
+        except requests.RequestException as e:
+            if attempt == attempts:
+                raise
+            print(f"[retry] LINE request failed ({e}); attempt {attempt}/{attempts}",
+                  file=sys.stderr)
+            sleep(backoff * attempt)
+            continue
+        if resp.status_code not in RETRY_STATUS or attempt == attempts:
+            return resp
+        print(f"[retry] LINE returned {resp.status_code}; attempt {attempt}/{attempts}",
+              file=sys.stderr)
+        sleep(backoff * attempt)
     return resp
 
 
@@ -188,6 +292,11 @@ def main():
     try:
         with open(args.signal, "r", encoding="utf-8") as f:
             signal_data = json.load(f)
+    except FileNotFoundError:
+        print(f"[error] {args.signal} not found. This file is Agent 6's output — "
+              f"run the pipeline in order (run_all.py), or at least "
+              f"`python agent6_qc_reviewer.py` first.", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"[error] could not read {args.signal}: {e}", file=sys.stderr)
         sys.exit(1)
@@ -208,11 +317,19 @@ def main():
         print("[dry-run] not sent.")
         return
 
-    resp = send_broadcast(token, message_text)
-    if resp.status_code == 200:
-        print("[ok] broadcast sent successfully.")
-    else:
-        print(f"[error] LINE API returned {resp.status_code}: {resp.text}", file=sys.stderr)
+    parts = split_for_line(message_text)
+    failed = 0
+    for i, part in enumerate(parts, 1):
+        resp = send_broadcast(token, part)
+        if resp is not None and resp.status_code == 200:
+            print(f"[ok] broadcast {i}/{len(parts)} sent successfully.")
+        else:
+            failed += 1
+            status = "no response" if resp is None else resp.status_code
+            body = "" if resp is None else f": {resp.text}"
+            print(f"[error] LINE API returned {status} on part {i}/{len(parts)}{body}",
+                  file=sys.stderr)
+    if failed:
         sys.exit(1)
 
 

@@ -17,6 +17,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 import agent6_qc_reviewer as qc
+import scoring
 
 NOW = datetime(2026, 8, 13, 12, 0, tzinfo=timezone.utc)
 
@@ -43,6 +44,13 @@ def make_signal(**overrides):
         "resistance": 1.10900,
         "reasons": ["EMA20 above EMA50 (short-term uptrend)"],
         "new": True,
+        # Rule 5b reads this. A card that does not say how old its price is
+        # cannot be checked, and QC treats what it cannot check as stale - so
+        # omitting it from the fixture would silently downgrade every test.
+        "data_age_minutes": 12.0,
+        # Rule 3 reads this: it is how QC verifies the stop is ATR-scaled
+        # rather than inferring it from the ratio alone.
+        "risk_atr_mult": 1.5,
     }
     signal.update(overrides)
     return signal
@@ -56,12 +64,22 @@ def make_news(events=None, generated_at=None):
     }
 
 
-def make_tech(generated_at=None):
+def make_tech(generated_at=None, interval="15m"):
     return {
         "generated_at": generated_at or iso(NOW - timedelta(minutes=2)),
-        "interval": "15m",
+        "interval": interval,
         "results": [],
     }
+
+
+def make_tech_1h(generated_at=None):
+    """The interval the pipeline actually runs on (scoring.DEFAULT_INTERVAL).
+
+    Most fixtures here stay on 15m so the bar-age limit is tight enough to
+    exercise; rule 5b's own tests need both, since the whole point of the rule
+    is that the limit is derived from the bar size rather than typed in.
+    """
+    return make_tech(generated_at, interval="1h")
 
 
 def make_signal_data(signals, generated_at=None):
@@ -300,11 +318,11 @@ class TestRule3RiskReward(unittest.TestCase):
     """Reward/risk is measured entry -> TP1 against entry -> SL."""
 
     def test_poor_rr_is_flagged(self):
-        # risk 100 pips, TP1 reward 100 pips -> 1.0, below the 1.5 floor
-        reviewed = review_one(make_signal(take_profit_1=1.10100, stop_loss=1.09900))
+        # risk 100 pips, TP1 reward 50 pips -> 0.5, below the 1.0 floor
+        reviewed = review_one(make_signal(take_profit_1=1.10050, stop_loss=1.09900))
 
         self.assertIn(qc.FLAG_POOR_RR, reviewed["qc_flags"])
-        self.assertEqual(reviewed["qc_risk_reward_tp1"], 1.0)
+        self.assertEqual(reviewed["qc_risk_reward_tp1"], 0.5)
         self.assertEqual(reviewed["qc_status"], qc.STATUS_DOWNGRADED)
         # A poor ratio is a warning, not a veto — the action stands.
         self.assertEqual(reviewed["final_action"], "Buy")
@@ -335,6 +353,72 @@ class TestRule3RiskReward(unittest.TestCase):
 
     def test_min_rr_zero_disables_the_check(self):
         reviewed = review_one(make_signal(take_profit_1=1.10050), min_rr=0)
+        self.assertNotIn(qc.FLAG_POOR_RR, reviewed["qc_flags"])
+
+    def test_the_floor_is_the_one_agent_3_builds_to(self):
+        """The two used to be separate 1.5s measuring different quantities.
+
+        Agent 3 gated on entry->TP3 and this file on entry->TP1, which is a
+        third of it, so QC's bar was silently three times the stricter and
+        31% of the backtest's own trades would have tripped it.
+        """
+        import agent3_signal_synthesizer as a3
+        self.assertEqual(qc.DEFAULT_MIN_RR, scoring.MIN_RR_TP1)
+        self.assertEqual(a3.DEFAULT_MIN_RR, scoring.MIN_RR_TP1)
+
+    def test_levels_built_by_agent_3_pass_qc_geometry(self):
+        """The end-to-end invariant: what Agent 3 builds, Agent 6 accepts.
+
+        Nothing checked this before, and the consequence was 98.6% of every
+        measured trade coming out of a fallback branch whose cards read
+        R:R 28.4 - through a QC layer that had a reward/risk rule.
+        """
+        import agent3_signal_synthesizer as a3
+        for pair, entry, atr in (("EURUSD", 1.10000, 0.00080),
+                                 ("USDJPY", 157.250, 0.1400),
+                                 ("XAUUSD", 2431.00, 3.3300)):
+            levels = a3.build_trade_levels(
+                "Buy", entry, a3.decimals_for_pair(pair), atr=atr)
+            signal = make_signal(pair=pair, open_price=entry, **levels)
+            reviewed = review_one(signal)
+            self.assertEqual(reviewed["qc_flags"], [], f"{pair}: {reviewed['qc_notes']}")
+
+
+class TestRule3ImplausibleLevels(unittest.TestCase):
+    """The check that was missing when the geometry came apart."""
+
+    def test_absurd_reward_risk_is_blocked_not_praised(self):
+        """A card really did go out reading "R:R 28.4"."""
+        reviewed = review_one(make_signal(take_profit_1=1.13000, stop_loss=1.09900))
+
+        self.assertIn(qc.FLAG_IMPLAUSIBLE_LEVELS, reviewed["qc_flags"])
+        self.assertEqual(reviewed["qc_status"], qc.STATUS_BLOCKED)
+        self.assertFalse(reviewed["new"])
+
+    def test_stop_that_is_not_atr_scaled_is_blocked(self):
+        """Straight at the bug: the old fallback put the stop at a flat
+        percentage of price, which on FX is a double-digit multiple of ATR."""
+        reviewed = review_one(make_signal(risk_atr_mult=11.0))
+
+        self.assertIn(qc.FLAG_IMPLAUSIBLE_LEVELS, reviewed["qc_flags"])
+        self.assertEqual(reviewed["qc_status"], qc.STATUS_BLOCKED)
+
+    def test_a_stop_collapsed_onto_the_entry_is_blocked(self):
+        reviewed = review_one(make_signal(risk_atr_mult=0.01))
+        self.assertIn(qc.FLAG_IMPLAUSIBLE_LEVELS, reviewed["qc_flags"])
+
+    def test_signals_without_the_field_are_not_penalised(self):
+        """Legacy cards predate risk_atr_mult; judge them on the ratio alone."""
+        signal = make_signal()
+        del signal["risk_atr_mult"]
+        self.assertEqual(review_one(signal)["qc_flags"], [])
+
+    def test_rounding_does_not_manufacture_a_poor_rr_flag(self):
+        """XAUUSD rounds to 2dp against a ~5-point risk, which lands the
+        constructed ratio at 0.998 rather than exactly 1.0."""
+        import agent3_signal_synthesizer as a3
+        levels = a3.build_trade_levels("Buy", 2431.00, 2, atr=3.33)
+        reviewed = review_one(make_signal(pair="XAUUSD", open_price=2431.00, **levels))
         self.assertNotIn(qc.FLAG_POOR_RR, reviewed["qc_flags"])
 
 
@@ -424,6 +508,79 @@ class TestRule5DataFreshness(unittest.TestCase):
         reviewed = review_one(make_signal(), tech=tech, max_data_age_minutes=60)
         self.assertEqual(reviewed["qc_status"], qc.STATUS_APPROVED)
 
+    def test_bar_age_limit_is_derived_from_the_interval(self):
+        """75 min on 1h bars, 30 on 15m. The same 45-minute-old price is
+        normal in one system and a late pipeline in the other."""
+        self.assertEqual(qc.max_bar_age_minutes({"interval": "1h"}), 75)
+        self.assertEqual(qc.max_bar_age_minutes({"interval": "15m"}), 30)
+
+    def test_unknown_interval_cannot_be_judged(self):
+        self.assertIsNone(qc.max_bar_age_minutes({}))
+        self.assertIsNone(qc.max_bar_age_minutes({"interval": "fortnightly"}))
+
+    def test_stale_entry_price_is_forced_to_wait(self):
+        """Rule 5 reads timestamps this pipeline wrote minutes ago and so can
+        only ever catch a crashed stage. This is the staleness that reaches a
+        phone: how far behind the market the quoted entry actually is."""
+        reviewed = review_one(make_signal(data_age_minutes=95.0),
+                              tech=make_tech_1h())
+
+        self.assertIn(qc.FLAG_STALE_PRICE, reviewed["qc_flags"])
+        self.assertEqual(reviewed["final_action"], "Wait")
+        self.assertEqual(reviewed["action"], "Wait")
+
+    def test_price_one_bar_old_is_normal_on_hourly_bars(self):
+        reviewed = review_one(make_signal(data_age_minutes=58.0), tech=make_tech_1h())
+        self.assertNotIn(qc.FLAG_STALE_PRICE, reviewed["qc_flags"])
+
+    def test_the_same_price_age_is_stale_on_15m_bars(self):
+        reviewed = review_one(make_signal(data_age_minutes=58.0))
+        self.assertIn(qc.FLAG_STALE_PRICE, reviewed["qc_flags"])
+
+    def test_missing_price_age_counts_as_stale(self):
+        signal = make_signal()
+        del signal["data_age_minutes"]
+        reviewed = review_one(signal)
+        self.assertIn(qc.FLAG_STALE_PRICE, reviewed["qc_flags"])
+        self.assertEqual(reviewed["final_action"], "Wait")
+
+    def test_a_wait_signal_is_not_price_checked(self):
+        """Nothing is being entered, so how old the quote is does not matter."""
+        signal = make_signal(action="Wait", direction="neutral")
+        del signal["data_age_minutes"]
+        self.assertNotIn(qc.FLAG_STALE_PRICE, review_one(signal)["qc_flags"])
+
+
+class TestRule1NewsUnverified(unittest.TestCase):
+    """A calendar that could not be read is not a calendar with no events."""
+
+    def test_calendar_error_is_flagged_and_penalised(self):
+        news = make_news()
+        news["calendar_error"] = "calendar fetch failed after 3 attempts: timeout"
+        reviewed = review_one(make_signal(), news=news)
+
+        self.assertIn(qc.FLAG_NEWS_UNVERIFIED, reviewed["qc_flags"])
+        self.assertEqual(reviewed["possibility_percent"], 70 - qc.NEWS_RISK_PENALTY)
+
+    def test_missing_calendar_key_is_flagged(self):
+        news = {"generated_at": iso(NOW - timedelta(minutes=2)), "news_headlines": []}
+        reviewed = review_one(make_signal(), news=news)
+        self.assertIn(qc.FLAG_NEWS_UNVERIFIED, reviewed["qc_flags"])
+
+    def test_an_empty_but_successful_calendar_is_not_flagged(self):
+        """The distinction the old code could not draw: a quiet news day."""
+        self.assertNotIn(qc.FLAG_NEWS_UNVERIFIED, review_one(make_signal())["qc_flags"])
+
+    def test_a_known_event_takes_precedence_over_the_unverified_flag(self):
+        news = make_news([{"impact": "High", "currency": "EUR", "title": "CPI",
+                           "time": iso(NOW + timedelta(minutes=30)), "actual": None}])
+        news["calendar_error"] = "partial"
+        reviewed = review_one(make_signal(), news=news)
+        self.assertIn(qc.FLAG_HIGH_RISK, reviewed["qc_flags"])
+        self.assertNotIn(qc.FLAG_NEWS_UNVERIFIED, reviewed["qc_flags"])
+
+
+class TestRule5StaleDataStillBlocks(unittest.TestCase):
     def test_blocked_wins_over_every_other_flag(self):
         """A stale run is blocked even if it also trips rules 2 and 3."""
         tech = make_tech(generated_at=iso(NOW - timedelta(minutes=45)))
@@ -470,11 +627,17 @@ class TestReviewPayload(unittest.TestCase):
         self.assertEqual(len(result["signals"]), 1)
         self.assertEqual(result["signal"]["final_action"], "Wait")
 
-    def test_empty_signal_list_is_approved(self):
+    def test_empty_signal_list_is_not_approved(self):
+        """"approved" on an empty run said QC had looked at something.
+
+        A run where Agent 2 lost every pair and a run where the market was
+        quiet both arrive here with an empty list, and both used to report
+        the same clean verdict as a run that passed three cards.
+        """
         result = qc.review(make_signal_data([]), make_news(), make_tech(), [], now=NOW)
         self.assertEqual(result["signals"], [])
         self.assertIsNone(result["signal"])
-        self.assertEqual(result["qc_status"], qc.STATUS_APPROVED)
+        self.assertEqual(result["qc_status"], qc.STATUS_NO_SIGNALS)
 
     def test_unrelated_top_level_keys_survive(self):
         payload = make_signal_data([make_signal()])

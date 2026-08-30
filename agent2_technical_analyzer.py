@@ -121,10 +121,22 @@ def analyze_pair(symbol: str, interval: str, period: str,
     last_signal = float(signal_line.iloc[-1])
     last_hist = float(histogram.iloc[-1])
 
-    # Simple recent support/resistance from last 50 bars
-    recent = close.tail(50)
-    resistance = float(recent.max())
-    support = float(recent.min())
+    # Recent support/resistance from the last 50 bars, taken from the bar LOWS
+    # and HIGHS rather than the closes.
+    #
+    # Closes were wrong in a way that mattered: `last_close` is itself the most
+    # recent close, so on any bar making new ground the entry price landed
+    # exactly on the range edge. scoring.range_pos then saturated at +/-1, and
+    # Agent 3's `support < entry < resistance` guard failed outright on 42% of
+    # entries - see scoring.py's TRADE GEOMETRY section for what that fallback
+    # went on to do. Lows and highs bracket the close by construction.
+    recent = df.tail(50)
+    if {"High", "Low"}.issubset(recent.columns):
+        resistance = float(recent["High"].max())
+        support = float(recent["Low"].min())
+    else:
+        resistance = float(close.tail(50).max())
+        support = float(close.tail(50).min())
 
     # How old is the candle we're pricing off? Yahoo's intraday feed lags,
     # and the last bar is still forming, so the entry price can be minutes
@@ -250,6 +262,17 @@ def main():
         json.dump(output, f, ensure_ascii=False, indent=2)
 
     print(json.dumps(output, ensure_ascii=False, indent=2))
+
+    # A run where every pair failed still wrote a well-formed file with a fresh
+    # timestamp, so Agent 3 saw "no candidates", Agent 6 saw fresh inputs and
+    # zero signals, and the pipeline reported success. Exiting non-zero makes
+    # a total data outage look like the failure it is; a partial one still
+    # passes, because one dead ticker should not stop the other eight.
+    usable = [r for r in results if "error" not in r]
+    if results and not usable:
+        print(f"[error] all {len(results)} pair(s) failed to produce technical data.",
+              file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

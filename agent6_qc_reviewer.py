@@ -17,7 +17,10 @@ Validation rules (all rule-based, no external API):
     1. News conflict  - high-impact event for either currency in the pair
                         landing within the next N minutes (default 120) and
                         still unreleased, while the action is Buy/Sell
-                        -> "high_risk", possibility % reduced.
+                        -> "high_risk", possibility % reduced. If Agent 1
+                        could not fetch the calendar at all, rule 1 cannot be
+                        evaluated: that is "news_unverified", and it costs the
+                        same penalty rather than passing silently.
     2. Worth taking   - two questions, both answered by validate.py's
                         measurement rather than by a number typed into this
                         file. (a) Has the strategy shown an edge distinguishable
@@ -28,13 +31,29 @@ Validation rules (all rule-based, no external API):
                         the measured payoff? If not -> "low_confidence",
                         forced to "Wait". The old flat 60% bar survives only as
                         the fallback for runs with no calibration file.
-    3. Reward/risk    - (TP1 - entry) / (entry - SL) below the minimum
-                        (default 1.5) -> "poor_rr".
+    3. Geometry       - (TP1 - entry) / (entry - SL) below scoring.MIN_RR_TP1
+                        -> "poor_rr". Above scoring.MAX_RR_TP1, or with a stop
+                        that is not a sane multiple of ATR, the levels are not
+                        generous but BROKEN -> "implausible_levels", blocked.
+                        This is the check that was missing: Agent 3 spent its
+                        entire measured history publishing cards built by a
+                        fixed-percentage fallback, one of which read "R:R 28.4",
+                        and nothing downstream thought that was strange.
     4. Contradiction  - an open trade on the same pair running the opposite
                         direction -> "conflicting_signal".
-    5. Data freshness - news_summary.json or technical_analysis.json older
-                        than the limit (default 30 min) -> "stale_data", and
-                        the whole run is blocked.
+    5. Data freshness - two different things, because the old rule only
+                        checked the one that cannot go wrong:
+                        (a) news_summary.json / technical_analysis.json older
+                            than the limit (default 30 min) -> "stale_data",
+                            whole run blocked. In a healthy pipeline these
+                            files are written minutes before this runs, so this
+                            only ever catches a crashed upstream stage.
+                        (b) the BAR the entry price came from being more than
+                            one interval + grace old -> "stale_price", forced
+                            to Wait. This is the staleness that reaches the
+                            user: on 1h bars the card's entry can legitimately
+                            be an hour behind the market, and nothing was
+                            measuring how much further behind it had drifted.
 
 Output: signal_reviewed.json — the same shape as signal.json, with every
 signal carrying qc_status / qc_flags / qc_notes / original_action /
@@ -59,14 +78,30 @@ import json
 import sys
 from datetime import datetime, timedelta, timezone
 
+import scoring
+
 # Fallback only. This applies when there is no score_calibration.json, i.e.
 # when possibility_percent is still Agent 3's uncalibrated linear guess. With
 # a calibration present, rule 2 derives its floor from the measured payoff -
 # see review_signal for why a hand-set win-rate bar is not a risk control.
 DEFAULT_MIN_POSSIBILITY = 60
-DEFAULT_MIN_RR = 1.5
+# Both from scoring.py, which is also where Agent 3 builds the levels. These
+# used to be a 1.5 here and a 1.5 there that measured different quantities:
+# Agent 3 gated on entry->TP3 and this file on entry->TP1, which is a third of
+# it, so the two numbers looked identical and this one was silently 3x stricter.
+DEFAULT_MIN_RR = scoring.MIN_RR_TP1
+DEFAULT_MAX_RR = scoring.MAX_RR_TP1
 DEFAULT_NEWS_WINDOW_MINUTES = 120
 DEFAULT_MAX_DATA_AGE_MINUTES = 30
+# Grace on top of one bar. The price on a card is always at least as old as the
+# forming bar it came from, so the limit has to be derived from the interval -
+# 45 min would be normal on 1h bars and a broken pipeline on 15m ones.
+DEFAULT_BAR_AGE_GRACE_MINUTES = 15
+# Slack on the reward/risk comparison. The levels are constructed at exactly
+# 1R/2R/3R and then ROUNDED to the pair's tick size, which on XAUUSD (2 dp
+# against a ~5-point risk) is enough to land at 0.998 - and a hair under 1.0
+# would otherwise flag poor_rr on every gold signal the system ever sends.
+RR_TOLERANCE = 0.05
 # What a pending high-impact release costs a signal. Agent 3 already docks 15
 # points for "high-impact event somewhere today"; this is the extra penalty
 # for one that is actually imminent.
@@ -77,11 +112,18 @@ FLAG_LOW_CONFIDENCE = "low_confidence"
 FLAG_POOR_RR = "poor_rr"
 FLAG_CONFLICTING = "conflicting_signal"
 FLAG_STALE_DATA = "stale_data"
+FLAG_STALE_PRICE = "stale_price"
 FLAG_UNPROVEN_EDGE = "unproven_edge"
+FLAG_IMPLAUSIBLE_LEVELS = "implausible_levels"
+FLAG_NEWS_UNVERIFIED = "news_unverified"
 
 STATUS_APPROVED = "approved"
 STATUS_DOWNGRADED = "downgraded"
 STATUS_BLOCKED = "blocked"
+# Run-level only. A run that produced nothing used to report "approved", so a
+# total upstream data failure and a clean quiet market looked identical in the
+# QC summary.
+STATUS_NO_SIGNALS = "no_signals"
 
 TRADE_ACTIONS = ("Buy", "Sell")
 OPPOSITE = {"Buy": "Sell", "Sell": "Buy"}
@@ -151,6 +193,56 @@ def check_data_freshness(news_data, tech_data, now, max_age_minutes):
     return stale, notes
 
 
+def max_bar_age_minutes(tech_data, grace=DEFAULT_BAR_AGE_GRACE_MINUTES):
+    """How stale the entry price may be, derived from the bar size.
+
+    Returns None when the interval is unrecognisable, which the caller treats
+    as "cannot verify" rather than as "fine".
+    """
+    interval = tech_data.get("interval") if isinstance(tech_data, dict) else None
+    if not interval:
+        # Not "assume the default" - a file that does not say what bar it
+        # scored is a file this cannot check, and rule 5b treats that as stale.
+        return None
+    minutes = scoring.interval_minutes(interval)
+    return None if minutes is None else minutes + grace
+
+
+def check_price_freshness(signal, limit_minutes):
+    """(is_stale, note) for the bar the card is priced off.
+
+    A missing age counts as stale for the same reason a missing generated_at
+    does: QC that waves through what it could not check is worse than no QC.
+    """
+    if limit_minutes is None:
+        return True, "bar interval is unrecognisable — cannot judge how stale the entry price is"
+    age = signal.get("data_age_minutes")
+    if not isinstance(age, (int, float)):
+        return True, "signal carries no data_age_minutes — entry-price staleness is unverifiable"
+    if age > limit_minutes:
+        return True, (f"entry price is from a bar {age:.0f} min old "
+                      f"(limit {limit_minutes:.0f} min for this interval)")
+    return False, None
+
+
+def news_is_unverified(news_data):
+    """(is_unverified, note) for Agent 1's calendar fetch.
+
+    Agent 1 writes a well-formed file with a fresh timestamp even when
+    ForexFactory is unreachable, so "no pending events" and "no idea whether
+    there are pending events" reached this file looking exactly alike, and rule
+    1 silently passed on both.
+    """
+    if not isinstance(news_data, dict):
+        return True, "no news data available — rule 1 could not be evaluated"
+    error = news_data.get("calendar_error")
+    if error:
+        return True, f"economic calendar unavailable ({error}) — rule 1 could not be evaluated"
+    if "calendar_events_today" not in news_data:
+        return True, "news file carries no calendar_events_today — rule 1 could not be evaluated"
+    return False, None
+
+
 # --------------------------------------------------------------------------
 # Rule 1 - imminent high-impact news
 # --------------------------------------------------------------------------
@@ -189,6 +281,47 @@ def imminent_high_impact_events(news_data, now, window_minutes):
 # --------------------------------------------------------------------------
 # Rule 3 - reward/risk measured off TP1
 # --------------------------------------------------------------------------
+def check_geometry(signal, min_rr, max_rr):
+    """Are these levels the ones Agent 3's rule is supposed to produce?
+
+    Three ways they can fail, in increasing order of "this is a bug, not a
+    judgement call":
+      - reward/risk to TP1 below the floor: the trade is not worth its stop.
+      - reward/risk above `max_rr`: nothing legitimate lands there. The old
+        fixed-percentage fallback published R:R 28.4 and 98.6% of every trade
+        ever measured came from it.
+      - the stop not sitting a sane number of ATRs from entry. This is the
+        direct check. `risk_atr_mult` is stamped on the signal by
+        build_trade_levels, so QC can verify the geometry rather than infer it.
+
+    Returns (rr, flags, notes) with flags drawn from FLAG_POOR_RR /
+    FLAG_IMPLAUSIBLE_LEVELS.
+    """
+    rr = reward_risk_tp1(signal)
+    flags, notes = [], []
+
+    if rr is None:
+        flags.append(FLAG_POOR_RR)
+        notes.append("reward/risk to TP1 could not be computed (missing entry/TP1/SL)")
+    elif min_rr > 0 and rr < min_rr - RR_TOLERANCE:
+        flags.append(FLAG_POOR_RR)
+        notes.append(f"reward/risk to TP1 is {rr:.2f}, below {min_rr}")
+    elif max_rr > 0 and rr > max_rr + RR_TOLERANCE:
+        flags.append(FLAG_IMPLAUSIBLE_LEVELS)
+        notes.append(f"reward/risk to TP1 is {rr:.2f}, above the {max_rr} ceiling — "
+                     f"the levels are broken, not generous")
+
+    risk_atr_mult = signal.get("risk_atr_mult")
+    if isinstance(risk_atr_mult, (int, float)):
+        lo, hi = scoring.MIN_SL_ATR_MULT, scoring.SL_ATR_MULT * 2
+        if not (lo <= risk_atr_mult <= hi):
+            flags.append(FLAG_IMPLAUSIBLE_LEVELS)
+            notes.append(f"stop sits {risk_atr_mult:.2f} ATRs from entry, outside the "
+                         f"{lo}-{hi} band scoring.SL_ATR_MULT implies")
+
+    return rr, flags, notes
+
+
 def reward_risk_tp1(signal):
     """Reward (entry -> TP1) divided by risk (entry -> SL).
 
@@ -241,6 +374,8 @@ def conflicting_open_trades(signal, open_trades):
 # --------------------------------------------------------------------------
 def review_signal(signal, *, now, imminent_events, open_trades, stale, stale_notes,
                   min_possibility=DEFAULT_MIN_POSSIBILITY, min_rr=DEFAULT_MIN_RR,
+                  max_rr=DEFAULT_MAX_RR, max_bar_age=None,
+                  news_unverified=False, news_unverified_note=None,
                   news_penalty=NEWS_RISK_PENALTY, allow_unproven_edge=False):
     """Run every rule over one signal and return a reviewed copy of it.
 
@@ -267,6 +402,14 @@ def review_signal(signal, *, now, imminent_events, open_trades, stale, stale_not
         # The before/after possibility numbers live in their own fields, so the
         # note only has to say what's coming and when.
         notes.append(f"high-impact news in {soonest['minutes_away']:.0f} min ({titles})")
+    elif is_trade and news_unverified:
+        # The calendar could not be read, so an imminent release cannot be ruled
+        # out. Costing the same penalty as a known one is the honest reading of
+        # "unknown"; treating it as "clear" is the reading that let a fetch
+        # failure look like a quiet news day.
+        flags.append(FLAG_NEWS_UNVERIFIED)
+        possibility = max(0, possibility - news_penalty)
+        notes.append(news_unverified_note or "news could not be verified")
 
     # Rule 2 - is this trade worth taking at all?
     #
@@ -332,15 +475,12 @@ def review_signal(signal, *, now, imminent_events, open_trades, stale, stale_not
             f"(uncalibrated — no score_calibration.json) — action forced to Wait"
         )
 
-    # Rule 3 - is the target worth the stop?
+    # Rule 3 - are the levels the ones Agent 3's rule is supposed to produce?
     rr = reward_risk_tp1(signal)
     if is_trade:
-        if rr is None:
-            flags.append(FLAG_POOR_RR)
-            notes.append("reward/risk to TP1 could not be computed (missing entry/TP1/SL)")
-        elif min_rr > 0 and rr < min_rr:
-            flags.append(FLAG_POOR_RR)
-            notes.append(f"reward/risk to TP1 is {rr:.2f}, below {min_rr}")
+        rr, geometry_flags, geometry_notes = check_geometry(signal, min_rr, max_rr)
+        flags.extend(geometry_flags)
+        notes.extend(geometry_notes)
 
     # Rule 4 - already holding the other side of this pair.
     conflicts = conflicting_open_trades(signal, open_trades)
@@ -349,10 +489,26 @@ def review_signal(signal, *, now, imminent_events, open_trades, stale, stale_not
         held = ", ".join(f"{t.get('action')} @ {t.get('entry_price')}" for t in conflicts)
         notes.append(f"contradicts an open trade on {signal.get('pair')} ({held})")
 
+    # Rule 5b - the price on the card is older than the bar it should have
+    # come from. Unlike rule 5 this one can actually fire in a healthy run:
+    # rule 5 reads timestamps written minutes earlier in this very pipeline,
+    # while this reads how far behind the market the quoted entry is.
+    if is_trade:
+        price_stale, price_note = check_price_freshness(signal, max_bar_age)
+        if price_stale:
+            flags.append(FLAG_STALE_PRICE)
+            final_action = "Wait"
+            notes.append(f"{price_note} — action forced to Wait")
+
     # Rule 5 - the whole run is built on stale inputs.
     if stale:
         flags.append(FLAG_STALE_DATA)
         notes.extend(stale_notes)
+        qc_status = STATUS_BLOCKED
+    elif FLAG_IMPLAUSIBLE_LEVELS in flags:
+        # Not a warning. Levels outside the geometry Agent 3 claims to build
+        # mean the card's numbers are wrong, and a card with wrong numbers must
+        # not reach a phone whatever else about it looks fine.
         qc_status = STATUS_BLOCKED
     elif flags or final_action != original_action:
         qc_status = STATUS_DOWNGRADED
@@ -387,14 +543,18 @@ def review_signal(signal, *, now, imminent_events, open_trades, stale, stale_not
 def review(signal_data, news_data, tech_data, open_trades, *, now=None,
            allow_unproven_edge=False,
            min_possibility=DEFAULT_MIN_POSSIBILITY, min_rr=DEFAULT_MIN_RR,
+           max_rr=DEFAULT_MAX_RR,
            news_window_minutes=DEFAULT_NEWS_WINDOW_MINUTES,
            max_data_age_minutes=DEFAULT_MAX_DATA_AGE_MINUTES,
+           bar_age_grace_minutes=DEFAULT_BAR_AGE_GRACE_MINUTES,
            news_penalty=NEWS_RISK_PENALTY):
     """Review a whole signal.json payload. Returns the signal_reviewed.json dict."""
     now = now or datetime.now(timezone.utc)
 
     stale, stale_notes = check_data_freshness(news_data, tech_data, now, max_data_age_minutes)
     imminent_events = imminent_high_impact_events(news_data, now, news_window_minutes)
+    unverified, unverified_note = news_is_unverified(news_data)
+    max_bar_age = max_bar_age_minutes(tech_data, bar_age_grace_minutes)
 
     signals = signal_data.get("signals")
     if signals is None:
@@ -406,7 +566,9 @@ def review(signal_data, news_data, tech_data, open_trades, *, now=None,
             s, now=now, imminent_events=imminent_events, open_trades=open_trades,
             stale=stale, stale_notes=stale_notes, min_possibility=min_possibility,
             allow_unproven_edge=allow_unproven_edge,
-            min_rr=min_rr, news_penalty=news_penalty,
+            min_rr=min_rr, max_rr=max_rr, max_bar_age=max_bar_age,
+            news_unverified=unverified, news_unverified_note=unverified_note,
+            news_penalty=news_penalty,
         )
         for s in signals
     ]
@@ -415,7 +577,13 @@ def review(signal_data, news_data, tech_data, open_trades, *, now=None,
     for s in reviewed_signals:
         counts[s["qc_status"]] += 1
 
-    if reviewed_signals and counts[STATUS_BLOCKED] == len(reviewed_signals):
+    if not reviewed_signals:
+        # Distinct from "approved". A run where Agent 2 lost every pair and a
+        # run where the market simply had nothing worth trading both arrive
+        # here with an empty list, and reporting either as approved told
+        # whoever read the summary that QC had looked at something.
+        run_status = STATUS_NO_SIGNALS
+    elif counts[STATUS_BLOCKED] == len(reviewed_signals):
         run_status = STATUS_BLOCKED
     elif counts[STATUS_DOWNGRADED] or counts[STATUS_BLOCKED]:
         run_status = STATUS_DOWNGRADED
@@ -433,12 +601,16 @@ def review(signal_data, news_data, tech_data, open_trades, *, now=None,
         "counts": counts,
         "stale_data": stale,
         "stale_notes": stale_notes,
+        "news_unverified": unverified,
+        "news_unverified_note": unverified_note,
         "imminent_high_impact_currencies": sorted(imminent_events.keys()),
         "thresholds": {
             "min_possibility_percent": min_possibility,
             "min_risk_reward_tp1": min_rr,
+            "max_risk_reward_tp1": max_rr,
             "news_window_minutes": news_window_minutes,
             "max_data_age_minutes": max_data_age_minutes,
+            "max_bar_age_minutes": max_bar_age,
         },
     }
     # Convenience mirror, so a consumer can check a single top-level key.
@@ -535,7 +707,15 @@ def main():
                              "live samples, not a fix - the gate re-arms on its own once "
                              "validate.py measures a real edge")
     parser.add_argument("--min-rr", type=float, default=DEFAULT_MIN_RR,
-                        help="Flag poor_rr below this reward/risk to TP1 (0 disables)")
+                        help="Flag poor_rr below this reward/risk to TP1 (0 disables). "
+                             "Shared with Agent 3 via scoring.MIN_RR_TP1")
+    parser.add_argument("--max-rr", type=float, default=DEFAULT_MAX_RR,
+                        help="Block implausible_levels above this reward/risk to TP1 "
+                             "(0 disables). Shared via scoring.MAX_RR_TP1")
+    parser.add_argument("--bar-age-grace-minutes", type=int,
+                        default=DEFAULT_BAR_AGE_GRACE_MINUTES,
+                        help="Grace on top of one bar interval before the entry price "
+                             "counts as stale and the signal is forced to Wait")
     parser.add_argument("--news-window-minutes", type=int, default=DEFAULT_NEWS_WINDOW_MINUTES,
                         help="How far ahead a high-impact release counts as imminent")
     parser.add_argument("--max-data-age-minutes", type=int, default=DEFAULT_MAX_DATA_AGE_MINUTES,
@@ -562,14 +742,17 @@ def main():
         min_possibility=args.min_possibility,
         allow_unproven_edge=args.allow_unproven_edge,
         min_rr=args.min_rr,
+        max_rr=args.max_rr,
         news_window_minutes=args.news_window_minutes,
         max_data_age_minutes=args.max_data_age_minutes,
+        bar_age_grace_minutes=args.bar_age_grace_minutes,
     )
 
     records = log_records(reviewed, log_all=args.log_all)
     kept, dropped = ([], []) if args.no_rollback else rollback_open_trades(open_trades, reviewed)
 
-    markers = {STATUS_APPROVED: "[ok]", STATUS_DOWNGRADED: "[warn]", STATUS_BLOCKED: "[block]"}
+    markers = {STATUS_APPROVED: "[ok]", STATUS_DOWNGRADED: "[warn]",
+               STATUS_BLOCKED: "[block]", STATUS_NO_SIGNALS: "[none]"}
     for s in reviewed["signals"]:
         print(f"{markers[s['qc_status']]} {s.get('pair')} {s.get('original_action')} -> "
               f"{s.get('final_action')}: {s['qc_status']} {s.get('qc_flags')} — {s.get('qc_notes')}",
@@ -594,6 +777,9 @@ def main():
                   f"{args.open_trade} — QC rejected the signal.", file=sys.stderr)
 
     counts = reviewed["qc"]["counts"]
+    if reviewed["qc_status"] == STATUS_NO_SIGNALS:
+        print(f"[none] QC had nothing to review — Agent 3 published no signals this run.",
+              file=sys.stderr)
     print(
         f"[ok] QC {reviewed['qc_status']}: {counts[STATUS_APPROVED]} approved, "
         f"{counts[STATUS_DOWNGRADED]} downgraded, {counts[STATUS_BLOCKED]} blocked; "

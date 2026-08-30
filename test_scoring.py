@@ -337,14 +337,52 @@ class TestTimeframeIsShared(unittest.TestCase):
         self.assertGreaterEqual(days * bars_per_calendar_day, self.agent2.MIN_BARS)
 
     def test_backtest_hold_window_matches_agent5(self):
-        """--bars-per-day is also the maximum hold, and Agent 5 times a live
-        trade out at MAX_HOLD_HOURS. On hourly bars the two are the same number,
-        and they stop being the same number the moment the interval changes."""
+        """The replay's maximum hold and Agent 5's timeout are one number.
+
+        On hourly bars they are the same integer, and they stop being the same
+        integer the moment the interval changes.
+        """
         self.assertEqual(scoring.DEFAULT_INTERVAL, "1h")
-        self.assertEqual(self.backtest.build_parser().get_default("bars_per_day"),
+        self.assertEqual(self.backtest.build_parser().get_default("max_hold_bars"),
                          scoring.BARS_PER_DAY)
         import agent5_price_watcher
         self.assertEqual(scoring.BARS_PER_DAY, agent5_price_watcher.MAX_HOLD_HOURS)
+
+
+class TestCadenceAndHoldAreSeparate(unittest.TestCase):
+    """How often a trade may be opened is not how long it is held.
+
+    backtest.py drove both from one --bars-per-day argument. The checked-in
+    calibration was generated with --bars-per-day 4 to match the 4-hourly cron,
+    which also cut the hold from 24 bars to 4 - so every one of the 1,312 trades
+    behind score_calibration.json was a four-hour trade measuring a system that
+    holds for twenty-four. Neither number was wrong on its own; they were the
+    same number, and nothing said they should not be.
+    """
+
+    def setUp(self):
+        import backtest
+        self.backtest = backtest
+
+    def test_the_two_defaults_are_different_quantities(self):
+        parser = self.backtest.build_parser()
+        self.assertEqual(parser.get_default("decision_every"),
+                         scoring.decision_every_bars())
+        self.assertEqual(parser.get_default("max_hold_bars"), scoring.BARS_PER_DAY)
+        self.assertNotEqual(parser.get_default("decision_every"),
+                            parser.get_default("max_hold_bars"))
+
+    def test_cadence_is_derived_from_the_live_cron(self):
+        """The workflow cron is "7 */4 * * 1-5"; on 1h bars that is 4 bars."""
+        self.assertEqual(scoring.decision_every_bars("1h"), 4)
+        self.assertEqual(scoring.decision_every_bars("15m"), 16)
+        self.assertEqual(scoring.decision_every_bars("1d"), 1)
+
+    def test_interval_minutes_parses_what_yfinance_accepts(self):
+        self.assertEqual(scoring.interval_minutes("5m"), 5)
+        self.assertEqual(scoring.interval_minutes("1h"), 60)
+        self.assertEqual(scoring.interval_minutes("1d"), 1440)
+        self.assertIsNone(scoring.interval_minutes("sometimes"))
 
 
 if __name__ == "__main__":
