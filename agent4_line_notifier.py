@@ -102,6 +102,15 @@ def build_qc_warning(signal: dict) -> list:
             f"   Downgraded {original_action} → {signal.get('action')} by QC — do not enter this trade."
         )
 
+    # Published under --allow-unproven-edge: the action was NOT downgraded, so
+    # without this line the card reads like any other approved trade with a
+    # warning flag attached. Say the quiet part on its own line.
+    if "unproven_edge" in signal.get("qc_flags", []) and signal.get("action") in ("Buy", "Sell"):
+        lines.append(
+            "   ⚠️ UNPROVEN EDGE — the backtest shows no measurable edge for this "
+            "strategy. This card is being sent to collect live samples. Size accordingly."
+        )
+
     original_possibility = signal.get("original_possibility_percent")
     if original_possibility is not None:
         lines.append(

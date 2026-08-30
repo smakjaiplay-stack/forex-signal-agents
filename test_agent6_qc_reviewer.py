@@ -158,7 +158,15 @@ class TestRule1NewsConflict(unittest.TestCase):
 
 
 class TestRule2ConfidenceThreshold(unittest.TestCase):
-    """Below the possibility floor, a Buy/Sell becomes a Wait."""
+    """The FALLBACK path: no calibration attached to the signal.
+
+    These signals carry no "calibration" block, which is what a run looks like
+    before validate.py has ever produced score_calibration.json. In that state
+    possibility_percent is Agent 3's uncalibrated linear guess, and the flat
+    DEFAULT_MIN_POSSIBILITY floor is the only thing available to gate on. Once
+    a calibration exists, TestRule2UnprovenEdge and TestRule2BreakevenFloor
+    describe what happens instead.
+    """
 
     def test_below_threshold_is_forced_to_wait(self):
         reviewed = review_one(make_signal(possibility_percent=55))
@@ -185,6 +193,107 @@ class TestRule2ConfidenceThreshold(unittest.TestCase):
                                           possibility_percent=40))
         self.assertEqual(reviewed["qc_flags"], [])
         self.assertEqual(reviewed["qc_status"], qc.STATUS_APPROVED)
+
+
+def calibration(**overrides):
+    """The block Agent 3 attaches from score_calibration.json.
+
+    Defaults describe a strategy with a proven edge, so each test below breaks
+    exactly one thing - the mirror of make_signal's contract.
+    """
+    calib = {
+        "breakeven_win_rate": 46.7,
+        "payoff_ratio": 1.14,
+        "expectancy_r": 0.05,
+        "expectancy_t": 2.4,
+        "edge_significant": True,
+        "trades": 1312,
+    }
+    calib.update(overrides)
+    return calib
+
+
+class TestRule2UnprovenEdge(unittest.TestCase):
+    """No demonstrated edge means nothing ships, whatever the possibility says.
+
+    The old rule compared possibility_percent against a flat 60. That number
+    was picked while possibility_percent was the constant 70 - a bar set just
+    under a decoration. These tests pin the two things that replaced it.
+    """
+
+    def test_unproven_edge_forces_wait_even_at_high_possibility(self):
+        reviewed = review_one(make_signal(
+            possibility_percent=95,
+            calibration=calibration(edge_significant=False, expectancy_r=-0.036,
+                                    expectancy_t=-1.44)))
+
+        self.assertIn(qc.FLAG_UNPROVEN_EDGE, reviewed["qc_flags"])
+        self.assertEqual(reviewed["final_action"], "Wait")
+        self.assertEqual(reviewed["status"], "No Trade")
+
+    def test_allow_unproven_edge_publishes_but_still_flags(self):
+        """The override collects live samples; it must not launder the signal."""
+        reviewed = review_one(
+            make_signal(possibility_percent=52,
+                        calibration=calibration(edge_significant=False)),
+            allow_unproven_edge=True)
+
+        self.assertIn(qc.FLAG_UNPROVEN_EDGE, reviewed["qc_flags"])
+        self.assertEqual(reviewed["final_action"], "Buy")
+        self.assertEqual(reviewed["qc_status"], qc.STATUS_DOWNGRADED)
+
+    def test_gate_rearms_itself_when_a_later_calibration_proves_an_edge(self):
+        """Nobody should have to remember to switch the gate back on."""
+        reviewed = review_one(make_signal(possibility_percent=52,
+                                          calibration=calibration()))
+        self.assertNotIn(qc.FLAG_UNPROVEN_EDGE, reviewed["qc_flags"])
+        self.assertEqual(reviewed["final_action"], "Buy")
+
+    def test_missing_edge_flag_counts_as_unproven(self):
+        """A calibration file written before the field existed has not
+        demonstrated an edge, so it must not be read as having one."""
+        calib = calibration()
+        del calib["edge_significant"]
+        reviewed = review_one(make_signal(possibility_percent=95, calibration=calib))
+        self.assertIn(qc.FLAG_UNPROVEN_EDGE, reviewed["qc_flags"])
+        self.assertEqual(reviewed["final_action"], "Wait")
+
+
+class TestRule2BreakevenFloor(unittest.TestCase):
+    """With an edge proven, the floor is the breakeven win rate - not 60."""
+
+    def test_below_breakeven_is_forced_to_wait(self):
+        reviewed = review_one(make_signal(possibility_percent=44,
+                                          calibration=calibration()))
+        self.assertIn(qc.FLAG_LOW_CONFIDENCE, reviewed["qc_flags"])
+        self.assertEqual(reviewed["final_action"], "Wait")
+
+    def test_above_breakeven_but_below_the_old_60_now_passes(self):
+        """52% loses money at a 1:1 payoff and makes money at 1.14:1.
+
+        This is the case the flat 60% bar got wrong, and the reason the floor
+        had to become a derived number rather than a chosen one.
+        """
+        reviewed = review_one(make_signal(possibility_percent=52,
+                                          calibration=calibration()))
+        self.assertEqual(reviewed["qc_flags"], [])
+        self.assertEqual(reviewed["final_action"], "Buy")
+
+    def test_a_worse_payoff_raises_the_floor_on_the_same_signal(self):
+        """Same 52% possibility, worse payoff -> blocked. The win rate alone
+        never carried enough information to make this call."""
+        reviewed = review_one(make_signal(
+            possibility_percent=52,
+            calibration=calibration(payoff_ratio=0.8, breakeven_win_rate=55.6)))
+        self.assertIn(qc.FLAG_LOW_CONFIDENCE, reviewed["qc_flags"])
+        self.assertEqual(reviewed["final_action"], "Wait")
+
+    def test_missing_breakeven_falls_back_to_the_hand_set_floor(self):
+        reviewed = review_one(make_signal(
+            possibility_percent=55,
+            calibration=calibration(breakeven_win_rate=None)))
+        self.assertIn(qc.FLAG_LOW_CONFIDENCE, reviewed["qc_flags"])
+        self.assertEqual(reviewed["final_action"], "Wait")
 
 
 class TestRule3RiskReward(unittest.TestCase):

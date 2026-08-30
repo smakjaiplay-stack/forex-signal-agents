@@ -18,9 +18,16 @@ Validation rules (all rule-based, no external API):
                         landing within the next N minutes (default 120) and
                         still unreleased, while the action is Buy/Sell
                         -> "high_risk", possibility % reduced.
-    2. Confidence     - possibility % (after rule 1) below the threshold
-                        (default 60) -> "low_confidence", action forced to
-                        "Wait".
+    2. Worth taking   - two questions, both answered by validate.py's
+                        measurement rather than by a number typed into this
+                        file. (a) Has the strategy shown an edge distinguishable
+                        from zero at all? If not -> "unproven_edge", forced to
+                        "Wait" (override with --allow-unproven-edge to gather
+                        live samples). (b) If it has, does this signal's
+                        possibility % clear the BREAKEVEN win rate implied by
+                        the measured payoff? If not -> "low_confidence",
+                        forced to "Wait". The old flat 60% bar survives only as
+                        the fallback for runs with no calibration file.
     3. Reward/risk    - (TP1 - entry) / (entry - SL) below the minimum
                         (default 1.5) -> "poor_rr".
     4. Contradiction  - an open trade on the same pair running the opposite
@@ -52,6 +59,10 @@ import json
 import sys
 from datetime import datetime, timedelta, timezone
 
+# Fallback only. This applies when there is no score_calibration.json, i.e.
+# when possibility_percent is still Agent 3's uncalibrated linear guess. With
+# a calibration present, rule 2 derives its floor from the measured payoff -
+# see review_signal for why a hand-set win-rate bar is not a risk control.
 DEFAULT_MIN_POSSIBILITY = 60
 DEFAULT_MIN_RR = 1.5
 DEFAULT_NEWS_WINDOW_MINUTES = 120
@@ -66,6 +77,7 @@ FLAG_LOW_CONFIDENCE = "low_confidence"
 FLAG_POOR_RR = "poor_rr"
 FLAG_CONFLICTING = "conflicting_signal"
 FLAG_STALE_DATA = "stale_data"
+FLAG_UNPROVEN_EDGE = "unproven_edge"
 
 STATUS_APPROVED = "approved"
 STATUS_DOWNGRADED = "downgraded"
@@ -229,7 +241,7 @@ def conflicting_open_trades(signal, open_trades):
 # --------------------------------------------------------------------------
 def review_signal(signal, *, now, imminent_events, open_trades, stale, stale_notes,
                   min_possibility=DEFAULT_MIN_POSSIBILITY, min_rr=DEFAULT_MIN_RR,
-                  news_penalty=NEWS_RISK_PENALTY):
+                  news_penalty=NEWS_RISK_PENALTY, allow_unproven_edge=False):
     """Run every rule over one signal and return a reviewed copy of it.
 
     The input dict is not mutated.
@@ -256,12 +268,68 @@ def review_signal(signal, *, now, imminent_events, open_trades, stale, stale_not
         # note only has to say what's coming and when.
         notes.append(f"high-impact news in {soonest['minutes_away']:.0f} min ({titles})")
 
-    # Rule 2 - a coin flip is not a trade.
-    if is_trade and possibility < min_possibility:
+    # Rule 2 - is this trade worth taking at all?
+    #
+    # This used to be `possibility < 60`, and 60 was chosen while
+    # possibility_percent was the constant 70 that scoring.py's docstring
+    # describes - a threshold set just under a decoration. Once the number
+    # became a measured win rate the comparison stopped meaning anything, in
+    # two separate ways:
+    #
+    #   1. A win rate cannot say whether a trade makes money. That depends on
+    #      what wins pay relative to what losses cost. At the measured 1.14:1
+    #      payoff, breakeven is 46.7%; at 2.2:1 it is 31.2%. The same "60%"
+    #      bar is unreachable in one regime and trivially loose in the other,
+    #      and the number itself does not tell you which one you are in.
+    #   2. Even a bucket above breakeven proves nothing while the strategy's
+    #      overall expectancy is statistically indistinguishable from zero.
+    #      Shipping the buckets that happened to print a positive average is
+    #      fitting sampling noise.
+    #
+    # So the gate now asks the two questions in order, and takes both answers
+    # from validate.py's measurement rather than from a number typed here.
+    calib = signal.get("calibration") if isinstance(signal.get("calibration"), dict) else None
+
+    if is_trade and calib:
+        if not calib.get("edge_significant"):
+            # 2a - nothing has been demonstrated. Publishing anyway would be
+            # broadcasting a coin flip with a confidence number attached.
+            if allow_unproven_edge:
+                flags.append(FLAG_UNPROVEN_EDGE)
+                notes.append(
+                    f"no measurable edge (expectancy {calib.get('expectancy_r')}R, "
+                    f"t={calib.get('expectancy_t')} over {calib.get('trades')} trades) — "
+                    f"published anyway under --allow-unproven-edge to collect live samples"
+                )
+            else:
+                flags.append(FLAG_UNPROVEN_EDGE)
+                final_action = "Wait"
+                notes.append(
+                    f"no measurable edge (expectancy {calib.get('expectancy_r')}R, "
+                    f"t={calib.get('expectancy_t')} over {calib.get('trades')} trades) — "
+                    f"action forced to Wait. Re-run validate.py; this re-arms itself"
+                )
+        else:
+            # 2b - an edge exists, so ask whether THIS setup clears the point
+            # where its own payoff cancels out. Derived, not chosen.
+            floor = calib.get("breakeven_win_rate")
+            floor = min_possibility if floor is None else floor
+            if possibility < floor:
+                flags.append(FLAG_LOW_CONFIDENCE)
+                final_action = "Wait"
+                notes.append(
+                    f"possibility {possibility}% below the {floor:.1f}% breakeven win rate "
+                    f"implied by a {calib.get('payoff_ratio')}:1 payoff — action forced to Wait"
+                )
+    elif is_trade and possibility < min_possibility:
+        # No calibration file at all: possibility_percent is still Agent 3's
+        # uncalibrated linear guess, so fall back to the hand-set floor. This
+        # branch is the only place DEFAULT_MIN_POSSIBILITY still applies.
         flags.append(FLAG_LOW_CONFIDENCE)
         final_action = "Wait"
         notes.append(
-            f"possibility {possibility}% below the {min_possibility}% threshold — action forced to Wait"
+            f"possibility {possibility}% below the {min_possibility}% threshold "
+            f"(uncalibrated — no score_calibration.json) — action forced to Wait"
         )
 
     # Rule 3 - is the target worth the stop?
@@ -317,6 +385,7 @@ def review_signal(signal, *, now, imminent_events, open_trades, stale, stale_not
 
 
 def review(signal_data, news_data, tech_data, open_trades, *, now=None,
+           allow_unproven_edge=False,
            min_possibility=DEFAULT_MIN_POSSIBILITY, min_rr=DEFAULT_MIN_RR,
            news_window_minutes=DEFAULT_NEWS_WINDOW_MINUTES,
            max_data_age_minutes=DEFAULT_MAX_DATA_AGE_MINUTES,
@@ -336,6 +405,7 @@ def review(signal_data, news_data, tech_data, open_trades, *, now=None,
         review_signal(
             s, now=now, imminent_events=imminent_events, open_trades=open_trades,
             stale=stale, stale_notes=stale_notes, min_possibility=min_possibility,
+            allow_unproven_edge=allow_unproven_edge,
             min_rr=min_rr, news_penalty=news_penalty,
         )
         for s in signals
@@ -456,7 +526,14 @@ def main():
     parser.add_argument("--out", default="signal_reviewed.json", help="Reviewed output for Agent 4")
     parser.add_argument("--qc-log", default="qc_log.jsonl", help="Append-only QC audit log")
     parser.add_argument("--min-possibility", type=int, default=DEFAULT_MIN_POSSIBILITY,
-                        help="Below this possibility %%, the action is forced to Wait")
+                        help="Fallback floor, used only when there is no score_calibration.json. "
+                             "With a calibration present the floor is the breakeven win rate "
+                             "implied by the measured payoff")
+    parser.add_argument("--allow-unproven-edge", action="store_true",
+                        help="Publish signals even though the backtest shows no measurable edge. "
+                             "Every card is stamped UNPROVEN EDGE. This is a decision to collect "
+                             "live samples, not a fix - the gate re-arms on its own once "
+                             "validate.py measures a real edge")
     parser.add_argument("--min-rr", type=float, default=DEFAULT_MIN_RR,
                         help="Flag poor_rr below this reward/risk to TP1 (0 disables)")
     parser.add_argument("--news-window-minutes", type=int, default=DEFAULT_NEWS_WINDOW_MINUTES,
@@ -483,6 +560,7 @@ def main():
     reviewed = review(
         signal_data, news_data, tech_data, open_trades,
         min_possibility=args.min_possibility,
+        allow_unproven_edge=args.allow_unproven_edge,
         min_rr=args.min_rr,
         news_window_minutes=args.news_window_minutes,
         max_data_age_minutes=args.max_data_age_minutes,
