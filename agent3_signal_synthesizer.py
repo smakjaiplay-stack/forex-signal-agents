@@ -467,6 +467,14 @@ def make_open_trade(signal, opened_at):
         "opened_at": opened_at,
         "closed": False,
         "alerts_sent": {"tp1": False, "tp2": False, "tp3": False, "sl": False},
+        # Carried so Agent 5 can stamp them onto the closed-trade record, which
+        # is what lets validate.py run the decile test and the per-component IC
+        # against LIVE outcomes. Without these two fields the forward samples
+        # can only ever answer "did it make money", never "which indicator was
+        # carrying it" - and the second question is the whole point of
+        # collecting them.
+        "score": signal.get("score"),
+        "components": signal.get("components") or {},
     }
 
 

@@ -164,14 +164,56 @@ def bootstrap_ci(values, iterations=5000, seed=7):
 # ---------------------------------------------------------------------------
 
 def load_trades(path):
+    """Read a trade log, accepting either a JSON array or JSON Lines.
+
+    backtest.py writes a JSON array; Agent 5 appends one object per line to
+    trades_log.jsonl as trades close. Both are trade logs and both belong in
+    this report - the live one is the only out-of-sample data this project
+    will ever have, since every backtest number was measured on the same bars
+    the rule was built against.
+    """
     try:
         with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, json.JSONDecodeError) as e:
+            raw = f.read()
+    except OSError as e:
         print(f"[error] could not read {path}: {e}", file=sys.stderr)
         sys.exit(1)
 
-    trades = data if isinstance(data, list) else data.get("trades", [])
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        # Fall back to JSON Lines. A blank trailing line is normal for an
+        # append-only log, and a half-written final line is possible if the
+        # watcher was killed mid-append - skip those rather than refusing to
+        # report on the trades that did land.
+        data, bad = [], 0
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                data.append(json.loads(line))
+            except json.JSONDecodeError:
+                bad += 1
+        if not data:
+            print(f"[error] {path} is neither JSON nor JSON Lines", file=sys.stderr)
+            sys.exit(1)
+        if bad:
+            print(f"[warn] skipped {bad} unparseable line(s) in {path}", file=sys.stderr)
+
+    if isinstance(data, list):
+        trades = data
+    elif isinstance(data, dict) and "trades" in data:
+        trades = data["trades"]
+    elif isinstance(data, dict):
+        # A one-line JSONL file is itself valid JSON - json.loads happily
+        # returns the single object, trailing newline and all - so it never
+        # reaches the JSON Lines branch above. That is precisely the state of
+        # trades_log.jsonl the moment the first live trade closes, which would
+        # otherwise be reported as "no usable trades".
+        trades = [data]
+    else:
+        trades = []
     trades = [t for t in trades if isinstance(t, dict) and "r_multiple" in t]
     if not trades:
         print(f"[error] no usable trades in {path}", file=sys.stderr)

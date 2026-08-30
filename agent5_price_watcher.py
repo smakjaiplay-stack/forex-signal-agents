@@ -118,6 +118,12 @@ def watch(open_trade: dict, token: str, dry_run: bool, trades_log_path: str):
             "r_multiple": open_trade["r_multiple"],
             "tp1": alerts["tp1"], "tp2": alerts["tp2"], "tp3": alerts["tp3"],
             "opened_at": open_trade["opened_at"], "closed_at": open_trade["closed_at"],
+            # The score that triggered the trade and the components behind it.
+            # validate.py needs both to measure a live information coefficient;
+            # trades logged before this existed simply carry None and are
+            # skipped by the component report rather than corrupting it.
+            "score": open_trade.get("score"),
+            "components": open_trade.get("components") or {},
         }, trades_log_path)
         notify(token,
                f"{'🟢' if r_multiple > 0 else '🔴' if r_multiple < 0 else '⚪'} {pair} {action} closed - "

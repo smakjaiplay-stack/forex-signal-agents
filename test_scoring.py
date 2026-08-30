@@ -17,6 +17,12 @@ import scoring
 import validate
 
 
+def nl_join(lines):
+    """Join with newlines. Exists so the JSONL fixtures above can be
+    written as lists instead of escape-laden string literals."""
+    return chr(10).join(lines)
+
+
 def base_row(**overrides):
     """A neutral, self-consistent indicator row. Override one field per test
     so each assertion isolates a single component."""
@@ -217,6 +223,79 @@ class TestDirection(unittest.TestCase):
         enter the IC with a positive sign."""
         self.assertEqual(validate.direction({"action": "Buy"}), 1.0)
         self.assertEqual(validate.direction({"action": "Sell"}), -1.0)
+
+
+class TestForwardSampleChain(unittest.TestCase):
+    """The live trade log must be readable AND carry what the report needs.
+
+    --allow-unproven-edge exists to accumulate forward samples, and forward
+    samples are only worth having if validate.py can run its decile test and
+    per-component IC against them. That needs two things the pipeline used to
+    drop on the floor: the log has to parse, and each record has to carry the
+    score and components that triggered the trade.
+    """
+
+    def _write(self, *lines):
+        """Write the given lines to a temp file, newline-separated.
+
+        Takes lines rather than a blob so the test data below contains no
+        escape sequences - the point of each case is the SHAPE of the log, and
+        that reads better as a list than as one string full of newlines.
+        """
+        fd, path = tempfile.mkstemp(suffix=".jsonl")
+        os.close(fd)
+        self.addCleanup(os.unlink, path)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(nl_join(lines))
+        return path
+
+    def test_json_lines_are_accepted(self):
+        """Agent 5 appends one object per line; backtest.py writes an array."""
+        path = self._write('{"r_multiple": 1.0}', '{"r_multiple": -1.0}', "")
+        self.assertEqual(len(validate.load_trades(path)), 2)
+
+    def test_json_array_still_works(self):
+        path = self._write('[{"r_multiple": 1.0}, {"r_multiple": -1.0}]')
+        self.assertEqual(len(validate.load_trades(path)), 2)
+
+    def test_trailing_blank_line_is_not_an_error(self):
+        """Normal for an append-only log."""
+        path = self._write('{"r_multiple": 1.0}', "", "")
+        self.assertEqual(len(validate.load_trades(path)), 1)
+
+    def test_half_written_final_line_is_skipped_not_fatal(self):
+        """The watcher can be killed mid-append. Report the trades that landed
+        rather than refusing to report at all."""
+        path = self._write('{"r_multiple": 1.0}', '{"r_multiple": -1.0}',
+                           '{"r_mult')
+        self.assertEqual(len(validate.load_trades(path)), 2)
+
+    def test_open_trade_carries_score_and_components(self):
+        """Agent 3 -> open_trade.json. Dropped here and the IC can never be
+        measured on live outcomes, however many trades accumulate."""
+        import agent3_signal_synthesizer as a3
+        signal = {
+            "pair": "EURUSD", "action": "Buy", "open_price": 1.10,
+            "take_profit_1": 1.101, "take_profit_2": 1.102,
+            "take_profit_3": 1.103, "stop_loss": 1.099,
+            "score": 1.83, "components": {"ema_sep": 0.5, "rsi_dev": -0.2},
+        }
+        trade = a3.make_open_trade(signal, "2026-08-30T00:00:00+00:00")
+        self.assertEqual(trade["score"], 1.83)
+        self.assertEqual(trade["components"]["ema_sep"], 0.5)
+
+    def test_missing_components_become_an_empty_dict_not_none(self):
+        """A None here would land in the log as null and break the IC report's
+        per-component lookup; an empty dict is simply skipped."""
+        import agent3_signal_synthesizer as a3
+        signal = {
+            "pair": "EURUSD", "action": "Buy", "open_price": 1.10,
+            "take_profit_1": 1.101, "take_profit_2": 1.102,
+            "take_profit_3": 1.103, "stop_loss": 1.099,
+        }
+        trade = a3.make_open_trade(signal, "2026-08-30T00:00:00+00:00")
+        self.assertEqual(trade["components"], {})
+        self.assertIsNone(trade["score"])
 
 
 class TestTimeframeIsShared(unittest.TestCase):

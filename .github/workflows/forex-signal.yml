@@ -48,6 +48,26 @@ jobs:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
         run: python run_all.py
 
+      - name: Live performance report (forward samples)
+        # Reads the LIVE trade log, not the backtest. This is the only
+        # out-of-sample evidence the project will ever have: every number in
+        # score_calibration.json was measured on the same historical bars the
+        # rule was built against, so the backtest cannot answer whether the
+        # rule works - only whether it fitted.
+        #
+        # --no-write is NOT optional. Without it, validate.py would overwrite
+        # score_calibration.json and ic_weights.json from whatever handful of
+        # live trades has closed so far, and Agent 3 would then hand those
+        # numbers to Agent 6 as if they were measurements. A dozen trades
+        # cannot calibrate anything.
+        #
+        # continue-on-error because this is a report, not a gate: an empty or
+        # missing trade log must never stop signals from going out. validate.py
+        # exits non-zero when it finds no usable trades, which is exactly the
+        # state this repo is in until forward samples accumulate.
+        continue-on-error: true
+        run: python validate.py --trades trades_log.jsonl --no-write
+
       - name: Commit today's signal + QC review + trade state
         run: |
           git config user.name "github-actions[bot]"
