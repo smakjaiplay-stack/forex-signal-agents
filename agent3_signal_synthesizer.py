@@ -21,7 +21,10 @@ Logic (rule-based):
        (falling back to the single best overall if nothing qualifies).
     4. Turn each bias into a trade card: Action (Buy/Sell/Wait),
        Possibility %, Take Profit 1-3, Stop Loss, Status, Time frame -
-       styled like a typical "forex signal" app card.
+       styled like a typical "forex signal" app card. The stop is ATR-scaled
+       and the targets are multiples of that risk (see build_trade_levels for
+       what the previous range-edge rule turned out to be doing), so a pair
+       with no usable ATR yields no publishable trade at all.
 
 Because the pipeline now runs several times a day (not once at market open),
 open_trade.json is *merged*, not overwritten: trades Agent 5 is still
@@ -44,10 +47,14 @@ DEFAULT_COOLDOWN_HOURS = 6
 # scoring.py next to the measured score distribution that justifies it, so
 # Agent 2, Agent 3 and backtest.py cannot each drift to a different cut.
 DEFAULT_MIN_SCORE = scoring.DEFAULT_MIN_SCORE
-# Stop-loss is capped at this many ATRs from entry, and a signal whose
-# reward/risk falls below DEFAULT_MIN_RR is not published at all.
-DEFAULT_ATR_MULT = 1.5
-DEFAULT_MIN_RR = 1.5
+# The stop sits this many ATRs from entry and the targets are multiples of that
+# risk. Both live in scoring.py, with the measurement that justifies them and
+# the account of what the previous range-edge rule actually did. Agent 6 reads
+# the same constants, which is the point: it used to gate on a 1.5 that meant
+# something different from Agent 3's 1.5.
+DEFAULT_ATR_MULT = scoring.SL_ATR_MULT
+DEFAULT_TP_R_MULTS = scoring.TP_R_MULTS
+DEFAULT_MIN_RR = scoring.MIN_RR_TP1
 
 
 # Currency -> which side of the pair it is doesn't matter for this rule;
@@ -83,10 +90,25 @@ def pending_high_impact_currencies(news_data):
 
 
 def decimals_for_pair(pair: str) -> int:
-    """Metals move in bigger increments than most FX pairs — round accordingly."""
-    if pair.upper() in ("XAUUSD", "XAGUSD"):
+    """How finely to round this pair's levels.
+
+    The constraint is not cosmetic. Levels are rounded AFTER being placed at
+    exact multiples of the risk, so the rounding error has to stay small
+    against that risk or the published ratio drifts off the 1:1 it claims -
+    and Agent 6 reads that drift as broken geometry.
+
+    Silver is the case that proves it: at ~28 with a ~0.11 ATR the risk is
+    about 0.165, and rounding that to 2dp moved the reward/risk to 1.06,
+    outside agent6.RR_TOLERANCE. Gold at ~2400 has a risk near 5.0, where the
+    same 2dp is nowhere near the tolerance. Same asset class, different answer,
+    which is why this is per-pair rather than per-category.
+    """
+    pair = pair.upper()
+    if pair == "XAUUSD":
         return 2
-    if pair.upper().endswith("JPY"):
+    if pair == "XAGUSD":
+        return 3
+    if pair.endswith("JPY"):
         return 3
     return 5
 
@@ -187,64 +209,70 @@ def possibility_percent(abs_score: float, risky: bool, calibration=None) -> int:
     return int(max(30, min(round(base), 95)))
 
 
-def build_trade_levels(action: str, entry: float, support: float, resistance: float, ndigits: int,
-                       atr: float = None, atr_mult: float = DEFAULT_ATR_MULT):
-    """Compute Take Profit 1/2/3 and Stop Loss from entry + support/resistance.
+def build_trade_levels(action: str, entry: float, ndigits: int, atr: float = None,
+                       atr_mult: float = DEFAULT_ATR_MULT,
+                       tp_r_mults=DEFAULT_TP_R_MULTS):
+    """Stop and targets for one trade, or None if they cannot be built honestly.
 
-    Buy: target = resistance, stop = support (TP1 closest to entry, TP3 furthest).
-    Sell: target = support, stop = resistance.
-    Falls back to a small percentage-based buffer if support/resistance don't
-    bracket the entry price sensibly (can happen with thin/odd data).
+    The risk is `atr_mult` ATRs, and TP1/TP2/TP3 sit at 1R/2R/3R from entry.
+    That makes the reward/risk on the card a stated fact rather than a
+    by-product of which branch of a guard happened to fire.
 
-    Taking the stop straight from the far edge of the range is what produced
-    trades risking 11 to make 1: when price is already sitting near one edge,
-    the target is a few pips away while the stop is most of the range wide.
-    So when ATR is available the stop is pulled in to at most `atr_mult` ATRs
-    from entry. That bounds risk but can't manufacture reward — a target
-    that's simply too close still yields a poor ratio, which is what the
-    `min_rr` filter in synthesize() is for.
+    THE RULE THIS REPLACED, AND WHY
+    -------------------------------
+    Targets came from the 50-bar range edge and the stop from the opposite
+    edge, with a fixed-percentage fallback "if support/resistance don't bracket
+    the entry price sensibly (can happen with thin/odd data)". It was not thin
+    or odd data. The bounds were rolling extremes of the CLOSE and the entry is
+    the latest close, so every setup making new ground - which is what a high
+    score selects - failed the guard and took the fallback. Measured over 502
+    entries: the guard failed 42% of the time, and once the reward/risk filter
+    had finished, 98.6% of all trades taken came out of the fallback. The
+    published strategy was a flat 1.5%-of-price target wearing a technical
+    rule's clothes. Full numbers in scoring.py's TRADE GEOMETRY section.
+
+    So there is no fallback here. Without an ATR there is no volatility
+    estimate, without a volatility estimate there is no honest stop distance,
+    and a signal with no honest stop distance does not get published: this
+    returns None and synthesize() records it in `rejected_no_levels`.
     """
     if action not in ("Buy", "Sell"):
         return None
+    # atr_mult <= 0 used to mean "no cap" back when the stop came from
+    # structure. There is no structure fallback to uncap onto any more, so it
+    # would mean a stop sitting on the entry price - a trade that stops out on
+    # the spread.
+    if not atr or atr <= 0 or atr != atr or atr_mult <= 0:
+        return None
 
-    sane = support < entry < resistance
-    if action == "Buy":
-        target = resistance if sane else entry * 1.015
-        stop = support if sane else entry * 0.9925
-    else:  # Sell
-        target = support if sane else entry * 0.985
-        stop = resistance if sane else entry * 1.0075
-
-    # atr_mult <= 0 means "no cap" — without this guard it would collapse the
-    # stop onto the entry price, i.e. a trade that stops out instantly.
-    if atr and atr > 0 and atr_mult > 0:
-        max_risk = atr * atr_mult
-        if abs(entry - stop) > max_risk:
-            stop = entry - max_risk if action == "Buy" else entry + max_risk
-
-    if action == "Buy":
-        tp1 = entry + (target - entry) / 3
-        tp2 = entry + (target - entry) * 2 / 3
-    else:
-        tp1 = entry - (entry - target) / 3
-        tp2 = entry - (entry - target) * 2 / 3
-    tp3 = target
-    sl = stop
+    risk = atr * max(atr_mult, scoring.MIN_SL_ATR_MULT)
+    sign = 1.0 if action == "Buy" else -1.0
+    tp1, tp2, tp3 = (entry + sign * risk * m for m in tp_r_mults)
 
     return {
         "take_profit_1": round(tp1, ndigits),
         "take_profit_2": round(tp2, ndigits),
         "take_profit_3": round(tp3, ndigits),
-        "stop_loss": round(sl, ndigits),
+        "stop_loss": round(entry - sign * risk, ndigits),
+        # Reported so a card, a backtest row and a QC verdict can all be
+        # checked against the volatility they were built from.
+        "risk_atr_mult": round(risk / atr, 3),
     }
 
 
-def risk_reward(entry: float, tp3: float, sl: float):
-    """Reward (entry->TP3) divided by risk (entry->SL). None if risk is zero."""
+def risk_reward(entry: float, target: float, sl: float):
+    """Reward (entry->target) divided by risk (entry->SL). None if risk is zero.
+
+    With R-multiple targets this is a constant by construction - 1.0 to TP1,
+    3.0 to TP3 - which is exactly why it is no longer a filter. It is computed
+    and published so that a card claiming 3:1 can be checked against its own
+    numbers, and so Agent 6 blocks the run if the geometry ever comes apart
+    again the way it did before.
+    """
     risk = abs(entry - sl)
     if risk <= 0:
         return None
-    return abs(tp3 - entry) / risk
+    return abs(target - entry) / risk
 
 
 def build_signal(candidate, time_frame, atr_mult=DEFAULT_ATR_MULT, calibration=None):
@@ -265,7 +293,7 @@ def build_signal(candidate, time_frame, atr_mult=DEFAULT_ATR_MULT, calibration=N
     action = {"bullish": "Buy", "bearish": "Sell", "neutral": "Wait"}[candidate["bias"]]
     ndigits = decimals_for_pair(candidate["pair"])
     levels = build_trade_levels(
-        action, candidate["last_close"], candidate["support"], candidate["resistance"], ndigits,
+        action, candidate["last_close"], ndigits,
         atr=candidate.get("atr14"), atr_mult=atr_mult,
     )
     now_utc = datetime.now(timezone.utc)
@@ -317,8 +345,16 @@ def build_signal(candidate, time_frame, atr_mult=DEFAULT_ATR_MULT, calibration=N
     }
     if levels:
         signal.update(levels)
-        rr = risk_reward(signal["open_price"], levels["take_profit_3"], levels["stop_loss"])
-        signal["risk_reward"] = round(rr, 2) if rr is not None else None
+        entry = signal["open_price"]
+        # Both ratios travel with the card. TP1 is the one that gets gated on
+        # and the one Agent 4 leads with, because it is the target most trades
+        # actually reach; TP3 is the stretch, and quoting only that number is
+        # how a card came to read "R:R 28.4".
+        rr1 = risk_reward(entry, levels["take_profit_1"], levels["stop_loss"])
+        rr3 = risk_reward(entry, levels["take_profit_3"], levels["stop_loss"])
+        signal["risk_reward_tp1"] = round(rr1, 2) if rr1 is not None else None
+        signal["risk_reward"] = round(rr3, 2) if rr3 is not None else None
+        signal["atr14"] = candidate.get("atr14")
     return signal
 
 
@@ -368,19 +404,37 @@ def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_
     # point of top-N is that you get more than one option per run.
     tradable = [c for c in pool_sorted if c["bias"] != "neutral" and c["abs_score"] >= min_score]
 
-    # A strong-looking bias is still a bad trade if the target sits a few pips
-    # away while the stop sits half a range away, so reward/risk decides what
-    # actually gets published — not just the indicator score.
+    # What gets dropped here has changed, and the change is the point. Under the
+    # old geometry this was a reward/risk filter, and because reward/risk was an
+    # accident of which branch of build_trade_levels fired, the filter was in
+    # practice selecting the broken branch: 212 of 212 fixed-percentage setups
+    # passed it against 3 of 290 structure-based ones. Reward/risk is a stated
+    # constant now, so it cannot select anything.
+    #
+    # The gate that remains is the one that actually matters: a signal with no
+    # usable ATR has no honest stop distance, so it is not published. `min_rr`
+    # survives as a tripwire on the constructed ratio - if the geometry ever
+    # drifts away from what scoring.py says it should be, that is a bug, and
+    # these rejections are where it surfaces.
     signals, rejected = [], []
     for candidate in tradable:
         signal = build_signal(candidate, time_frame, atr_mult=atr_mult, calibration=calibration)
-        rr = signal.get("risk_reward")
+        rr = signal.get("risk_reward_tp1")
+        if signal.get("stop_loss") is None:
+            rejected.append({
+                "pair": signal["pair"],
+                "action": signal["action"],
+                "risk_reward_tp1": None,
+                "reason": f"no usable ATR for {signal['pair']} — cannot size a stop",
+            })
+            continue
         if min_rr > 0 and (rr is None or rr < min_rr):
             rejected.append({
                 "pair": signal["pair"],
                 "action": signal["action"],
-                "risk_reward": rr,
-                "reason": f"reward/risk {rr} below minimum {min_rr}",
+                "risk_reward_tp1": rr,
+                "reason": f"reward/risk to TP1 {rr} below minimum {min_rr} — "
+                          f"the levels are not what scoring.TP_R_MULTS specifies",
             })
             continue
         signals.append(signal)
@@ -397,6 +451,9 @@ def synthesize(news_data, tech_data, top_n=DEFAULT_TOP_N, min_score=DEFAULT_MIN_
         "signals": signals,
         # Kept so anything still reading the old single-signal shape works.
         "signal": signals[0] if signals else None,
+        "rejected": rejected,
+        # Kept under its old name so an existing reader (and the CI commit
+        # step) does not silently start seeing nothing.
         "rejected_low_rr": rejected,
         "all_candidates": sorted(candidates, key=lambda c: c["abs_score"], reverse=True),
     }
@@ -498,9 +555,11 @@ def main():
                          help="Score-to-win-rate table from validate.py; without it "
                               "possibility_percent is an uncalibrated guess")
     parser.add_argument("--min-rr", type=float, default=DEFAULT_MIN_RR,
-                         help="Drop signals whose reward/risk is below this (0 disables the filter)")
+                         help="Tripwire on the constructed reward/risk to TP1 (0 disables). "
+                              "Not a trade filter any more — the ratio is fixed by "
+                              "scoring.TP_R_MULTS, so this only fires if the geometry breaks")
     parser.add_argument("--atr-mult", type=float, default=DEFAULT_ATR_MULT,
-                         help="Cap the stop-loss at this many ATRs from entry")
+                         help="Place the stop-loss this many ATRs from entry")
     parser.add_argument("--cooldown-hours", type=float, default=DEFAULT_COOLDOWN_HOURS,
                          help="Don't re-enter a pair this soon after its last trade closed (0 disables)")
     args = parser.parse_args()
@@ -558,12 +617,12 @@ def main():
     with open(args.open_trade_out, "w", encoding="utf-8") as f:
         json.dump(open_trades + new_trades, f, ensure_ascii=False, indent=2)
 
-    for r in result.get("rejected_low_rr", []):
+    for r in result.get("rejected", []):
         print(f"[skip] {r['pair']} {r['action']}: {r['reason']}", file=sys.stderr)
 
     print(
         f"[ok] {len(result.get('signals', []))} signal(s) published, "
-        f"{len(result.get('rejected_low_rr', []))} rejected on reward/risk, "
+        f"{len(result.get('rejected', []))} rejected, "
         f"{len(new_trades)} new trade(s) opened, "
         f"{len(open_trades) + len(new_trades)} now being watched.",
         file=sys.stderr,

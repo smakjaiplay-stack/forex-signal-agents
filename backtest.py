@@ -40,21 +40,17 @@ CAVEAT - high-impact news is NOT filtered here:
     as an upper bound on trade frequency/confidence, not a like-for-like
     replay of live behavior.
 
-CAVEAT - the DECISION CADENCE does not match live:
-    Bar size does match now: both sides read scoring.DEFAULT_INTERVAL, so the
-    score, its threshold and its calibration all describe the same bar. What
-    still differs is how often a decision is taken. This replay decides once
-    every --bars-per-day bars (24 = once a day), which was accurate when the
-    pipeline ran on a 7am daily cron. That cron is now "7 */4 * * 1-5" - six
-    runs a day - so the live system gets roughly six chances a day to open a
-    trade against this replay's one.
-    Consequence: trade FREQUENCY here understates live by about 6x. Per-trade
-    statistics (expectancy, win rate, the decile test, component ICs) are not
-    invalidated by this - they are computed per trade, not per day - but any
-    reading of "net R over the period" is not comparable to what live would
-    have produced. Fixing it means --bars-per-day 4, which changes the trade
-    population and therefore requires regenerating score_calibration.json and
-    ic_weights.json through validate.py.
+CADENCE AND HOLD ARE SEPARATE PARAMETERS - they did not used to be:
+    --decision-every says how often a trade can be opened (4 bars, matching
+    the "7 */4 * * 1-5" cron), and --max-hold-bars says how long one is held
+    (24 bars, matching agent5.MAX_HOLD_HOURS). Both used to come from a single
+    --bars-per-day argument, and the calibration checked in before this change
+    was generated with --bars-per-day 4 in order to match the 4-hourly cron.
+    That silently cut the hold to 4 bars as well, so all 1,312 trades behind
+    score_calibration.json were four-hour trades describing a system that
+    holds for twenty-four. test_scoring.TestCadenceAndHoldAreSeparate now pins
+    the two defaults against agent5, because a caveat in a docstring is
+    exactly what failed to hold this invariant the first time.
 """
 
 import argparse
@@ -80,6 +76,13 @@ from agent3_signal_synthesizer import (
     possibility_percent,
     risk_reward,
 )
+
+# Bump when compute_indicators changes what it produces. The cache used to be
+# keyed on (pairs, period, interval) alone while storing the DERIVED columns,
+# so editing an indicator - support/resistance moving from closes to lows/highs,
+# for instance - left every later run silently replaying the old definition
+# from disk and reporting it as a fresh measurement.
+INDICATOR_VERSION = 2
 
 # ---------------------------------------------------------------------------
 # Exit policies
@@ -162,8 +165,11 @@ def compute_indicators(df: pd.DataFrame):
     _, plus_di, minus_di = scoring.calc_adx(df)
     df["plus_di"] = plus_di
     df["minus_di"] = minus_di
-    df["support"] = close.rolling(50).min()
-    df["resistance"] = close.rolling(50).max()
+    # Lows and highs, matching agent2.analyze_pair. Rolling extremes of the
+    # CLOSE put the entry price exactly on the range edge on any bar making new
+    # ground, which is what sent 42% of entries into Agent 3's fallback branch.
+    df["support"] = df["Low"].rolling(50).min()
+    df["resistance"] = df["High"].rolling(50).max()
     return df
 
 
@@ -269,6 +275,7 @@ def load_data(pairs, period, interval, delay, cache_path=None, refresh=False):
     fetched once and every subsequent experiment runs offline against exactly
     the same data, which is also what makes the comparison fair.
     """
+    wanted_key = (tuple(sorted(p.upper() for p in pairs)), period, interval)
     if cache_path and not refresh and os.path.exists(cache_path):
         try:
             with open(cache_path, "rb") as f:
@@ -276,14 +283,22 @@ def load_data(pairs, period, interval, delay, cache_path=None, refresh=False):
         except Exception as e:
             print(f"[warn] cache at {cache_path} unreadable ({e}); re-downloading", file=sys.stderr)
         else:
-            key = cached.get("key")
-            if key == (tuple(sorted(p.upper() for p in pairs)), period, interval):
-                print(f"[cache] loaded {len(cached['data'])} pairs from {cache_path}")
-                return cached["data"]
+            if cached.get("key") == wanted_key:
+                bars = cached.get("bars")
+                if bars is None:
+                    # Pre-versioning cache: it holds frames with the indicator
+                    # columns already computed. High/Low/Close are still in
+                    # there, so the bars are salvageable - recompute rather
+                    # than throw away a 20MB download over a column rename.
+                    bars = {pair: df[["High", "Low", "Close"]].dropna()
+                            for pair, df in cached.get("data", {}).items()}
+                    print("[cache] pre-v2 cache: recomputing indicators from its bars")
+                print(f"[cache] loaded {len(bars)} pairs of bars from {cache_path}")
+                return {pair: compute_indicators(df) for pair, df in bars.items()}
             print("[cache] key mismatch (different pairs/period/interval); re-downloading")
 
     print(f"Downloading {interval} history ({period}) for {len(pairs)} pairs...")
-    data = {}
+    bars = {}
     for pair in pairs:
         symbol = DEFAULT_PAIRS.get(pair.upper())
         if not symbol:
@@ -292,34 +307,40 @@ def load_data(pairs, period, interval, delay, cache_path=None, refresh=False):
         if hist is None or len(hist) < 100:
             print(f"  [skip] {pair}: insufficient data")
             continue
-        data[pair] = compute_indicators(hist)
+        bars[pair] = hist
         print(f"  [ok] {pair}: {len(hist)} bars")
 
-    if not data:
+    if not bars:
         print("[error] no data downloaded for any pair - cannot backtest.", file=sys.stderr)
         sys.exit(1)
 
     if cache_path:
         os.makedirs(os.path.dirname(os.path.abspath(cache_path)), exist_ok=True)
         with open(cache_path, "wb") as f:
-            pickle.dump({
-                "key": (tuple(sorted(p.upper() for p in pairs)), period, interval),
-                "data": data,
-            }, f)
+            # Raw bars only. Indicators are cheap to recompute and expensive to
+            # get silently wrong; the bars are the part Yahoo rate-limits.
+            pickle.dump({"key": wanted_key, "indicator_version": INDICATOR_VERSION,
+                         "bars": bars}, f)
         print(f"[cache] saved to {cache_path}")
 
-    return data
+    return {pair: compute_indicators(df) for pair, df in bars.items()}
 
 
-def replay(data, bars_per_day, atr_mult=DEFAULT_ATR_MULT, min_rr=DEFAULT_MIN_RR,
-           min_score=DEFAULT_MIN_SCORE, policy=DEFAULT_EXIT_POLICY,
-           use_ic_weights=False, quiet=False):
-    """Run the decision rule over pre-loaded bars. Pure function of `data`."""
-    # Align all pairs on a shared set of "daily decision" timestamps (every
-    # bars_per_day bars, matching the once-a-day cron). The warmup is 250 bars
-    # rather than the old 60 because EMA200 is only meaningful after that.
+def replay(data, decision_every, max_hold_bars=None, atr_mult=DEFAULT_ATR_MULT,
+           min_rr=DEFAULT_MIN_RR, min_score=DEFAULT_MIN_SCORE,
+           policy=DEFAULT_EXIT_POLICY, use_ic_weights=False, quiet=False):
+    """Run the decision rule over pre-loaded bars. Pure function of `data`.
+
+    `decision_every` is how often a trade may be opened; `max_hold_bars` is how
+    long it may be held. Passing one number for both is what made every
+    previously-measured trade a four-hour trade - see the module docstring.
+    """
+    if max_hold_bars is None:
+        max_hold_bars = scoring.BARS_PER_DAY
+    # Align all pairs on a shared set of decision timestamps. The warmup is 250
+    # bars rather than the old 60 because EMA200 is only meaningful after that.
     min_len = min(len(df) for df in data.values())
-    decision_indices = list(range(250, min_len - bars_per_day, bars_per_day))
+    decision_indices = list(range(250, min_len - max_hold_bars, decision_every))
 
     trades = []
     for idx in decision_indices:
@@ -347,31 +368,33 @@ def replay(data, bars_per_day, atr_mult=DEFAULT_ATR_MULT, min_rr=DEFAULT_MIN_RR,
         _, pair, action, score, values, row = candidates[0]
         df = data[pair]
         entry = float(row["Close"])
-        support = float(row["support"])
-        resistance = float(row["resistance"])
         ndigits = decimals_for_pair(pair)
         atr = float(row["atr14"]) if not pd.isna(row["atr14"]) else None
-        levels = build_trade_levels(action, entry, support, resistance, ndigits,
-                                    atr=atr, atr_mult=atr_mult)
+        # No ATR, no stop, no trade - the same rule Agent 3 applies live, and
+        # the reason build_trade_levels no longer has a fallback to invent one.
+        levels = build_trade_levels(action, entry, ndigits, atr=atr, atr_mult=atr_mult)
         if not levels:
             continue
 
-        # Same reward/risk gate Agent 3 applies live, so the backtest measures
-        # the trades the live system would actually take.
+        # Constant by construction now (see scoring.py, TRADE GEOMETRY). Kept
+        # as the same tripwire Agent 3 runs, so a geometry regression shows up
+        # here as trades vanishing rather than as a quietly different strategy.
+        rr1 = risk_reward(entry, levels["take_profit_1"], levels["stop_loss"])
         rr = risk_reward(entry, levels["take_profit_3"], levels["stop_loss"])
-        if min_rr > 0 and (rr is None or rr < min_rr):
+        if min_rr > 0 and (rr1 is None or rr1 < min_rr):
             continue
 
         result = simulate_trade(
             pair, df, idx, action, entry,
             levels["take_profit_1"], levels["take_profit_2"], levels["take_profit_3"],
-            levels["stop_loss"], bars_per_day, policy=policy,
+            levels["stop_loss"], max_hold_bars, policy=policy,
         )
         if result:
             result["timestamp"] = str(df.index[idx])
             result["action"] = action
             result["score"] = round(score, 4)
             result["risk_reward"] = round(rr, 2)
+            result["risk_reward_tp1"] = round(rr1, 2)
             # Per-component values are what validate.py computes the IC
             # against - without them there is no way to ask which indicator
             # is carrying the edge.
@@ -383,13 +406,14 @@ def replay(data, bars_per_day, atr_mult=DEFAULT_ATR_MULT, min_rr=DEFAULT_MIN_RR,
     return trades
 
 
-def run_backtest(pairs, period, interval, bars_per_day, delay,
+def run_backtest(pairs, period, interval, decision_every, delay, max_hold_bars=None,
                  atr_mult=DEFAULT_ATR_MULT, min_rr=DEFAULT_MIN_RR,
                  min_score=DEFAULT_MIN_SCORE, policy=DEFAULT_EXIT_POLICY,
                  cache_path=None, refresh=False, use_ic_weights=False):
     data = load_data(pairs, period, interval, delay, cache_path=cache_path, refresh=refresh)
-    return replay(data, bars_per_day, atr_mult=atr_mult, min_rr=min_rr,
-                  min_score=min_score, policy=policy, use_ic_weights=use_ic_weights)
+    return replay(data, decision_every, max_hold_bars=max_hold_bars, atr_mult=atr_mult,
+                  min_rr=min_rr, min_score=min_score, policy=policy,
+                  use_ic_weights=use_ic_weights)
 
 
 def expectancy_stats(trades) -> dict:
@@ -507,7 +531,8 @@ def summarize(trades):
     print("=" * 60)
 
 
-def sweep(data, bars_per_day, atr_mult, min_rr, min_score, use_ic_weights=False):
+def sweep(data, decision_every, max_hold_bars, atr_mult, min_rr, min_score,
+          use_ic_weights=False):
     """Every exit policy over identical bars, ranked by expectancy.
 
     Same entries, same levels, same data: the only thing that varies is what
@@ -516,7 +541,8 @@ def sweep(data, bars_per_day, atr_mult, min_rr, min_score, use_ic_weights=False)
     """
     rows = []
     for policy in EXIT_POLICIES:
-        trades = replay(data, bars_per_day, atr_mult=atr_mult, min_rr=min_rr,
+        trades = replay(data, decision_every, max_hold_bars=max_hold_bars,
+                        atr_mult=atr_mult, min_rr=min_rr,
                         min_score=min_score, policy=policy,
                         use_ic_weights=use_ic_weights, quiet=True)
         rows.append((policy, trades, expectancy_stats(trades)))
@@ -559,18 +585,22 @@ def build_parser():
                          help=f"Bar interval (default {scoring.DEFAULT_INTERVAL}). Shared with "
                               f"Agent 2 via scoring.DEFAULT_INTERVAL rather than asserted in a "
                               f"comment - that assertion is what silently went false before")
-    parser.add_argument("--bars-per-day", type=int, default=scoring.BARS_PER_DAY,
-                         help="Bars between decision points, and the maximum hold. The hold "
-                              "matches live (agent5.MAX_HOLD_HOURS = 24). The CADENCE does not: "
-                              "the pipeline cron is every 4h, so live gets ~6 decision points per "
-                              "day to this replay's 1. See the cadence caveat in the module docstring")
+    parser.add_argument("--decision-every", type=int, default=scoring.decision_every_bars(),
+                         help="Bars between decision points, matching the live cron "
+                              "(scoring.LIVE_RUN_INTERVAL_HOURS)")
+    parser.add_argument("--max-hold-bars", type=int, default=scoring.BARS_PER_DAY,
+                         help="Maximum bars a trade is held, matching agent5.MAX_HOLD_HOURS. "
+                              "This and --decision-every used to be one argument, which made "
+                              "every measured trade a 4-hour one by accident")
     parser.add_argument("--delay", type=float, default=3.0,
                          help="Seconds to pause before each pair's download, to avoid Yahoo Finance rate limits")
     parser.add_argument("--out", default="backtest_trades.json", help="Where to save the raw trade log")
     parser.add_argument("--atr-mult", type=float, default=DEFAULT_ATR_MULT,
-                         help="Cap the stop-loss at this many ATRs from entry (0 = old uncapped behavior)")
+                         help="Place the stop-loss this many ATRs from entry (shared with Agent 3 "
+                              "via scoring.SL_ATR_MULT)")
     parser.add_argument("--min-rr", type=float, default=DEFAULT_MIN_RR,
-                         help="Skip setups whose reward/risk is below this (0 = take every setup)")
+                         help="Tripwire on the constructed reward/risk to TP1 (0 disables). "
+                              "Shared with Agent 3 via scoring.MIN_RR_TP1")
     parser.add_argument("--min-score", type=float, default=DEFAULT_MIN_SCORE,
                          help="Minimum |score| for a setup to be tradable")
     parser.add_argument("--exit-policy", default=DEFAULT_EXIT_POLICY, choices=sorted(EXIT_POLICIES),
@@ -592,13 +622,14 @@ def main():
                      cache_path=args.cache, refresh=args.refresh)
 
     if args.sweep:
-        rows = sweep(data, args.bars_per_day, args.atr_mult, args.min_rr, args.min_score,
-                     use_ic_weights=args.use_ic_weights)
+        rows = sweep(data, args.decision_every, args.max_hold_bars, args.atr_mult,
+                     args.min_rr, args.min_score, use_ic_weights=args.use_ic_weights)
         # Persist the baseline policy's trades so validate.py has something to
         # read even after a sweep.
         trades = next(t for p, t, _ in rows if p == args.exit_policy)
     else:
-        trades = replay(data, args.bars_per_day, atr_mult=args.atr_mult, min_rr=args.min_rr,
+        trades = replay(data, args.decision_every, max_hold_bars=args.max_hold_bars,
+                        atr_mult=args.atr_mult, min_rr=args.min_rr,
                         min_score=args.min_score, policy=args.exit_policy,
                         use_ic_weights=args.use_ic_weights)
 

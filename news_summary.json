@@ -1,131 +1,103 @@
 {
-  "generated_at": "2026-08-26T01:47:41.226818+00:00",
-  "calendar_events_today": [
-    {
-      "time": "2026-08-26T08:30:00-04:00",
-      "currency": "USD",
-      "title": "Core PCE Price Index m/m",
-      "impact": "High",
-      "forecast": "0.2%",
-      "previous": "0.1%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-26T08:30:00-04:00",
-      "currency": "USD",
-      "title": "Prelim GDP q/q",
-      "impact": "High",
-      "forecast": "1.5%",
-      "previous": "1.5%",
-      "actual": null
-    },
-    {
-      "time": "2026-08-26T08:30:00-04:00",
-      "currency": "USD",
-      "title": "Prelim GDP Price Index q/q",
-      "impact": "Medium",
-      "forecast": "6.2%",
-      "previous": "6.2%",
-      "actual": null
-    }
-  ],
+  "generated_at": "2026-08-30T15:07:50.416663+00:00",
+  "calendar_events_today": [],
   "calendar_error": null,
   "news_headlines": [
     {
       "source": "Investing.com - Forex News",
-      "title": "Dollar slips amid bond market rally ahead of PCE, Jackson Hole; loonie rebounds",
-      "published": "2026-08-25 19:58:34",
-      "link": "https://www.investing.com/news/forex-news/asia-fx-dips-as-dollar-rebounds-slightly-iran-sanctions-treasury-yields-in-focus-4874467"
+      "title": "US Treasury’s Bessent faces G20 diplomacy test amid tariffs, Iran war, bond turmoil",
+      "published": "2026-08-30 10:06:32",
+      "link": "https://www.investing.com/news/forex-news/us-treasurys-bessent-faces-g20-diplomacy-test-amid-tariffs-iran-war-bond-turmoil-4882036"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "South African rand strengthens despite business conditions drop",
-      "published": "2026-08-25 16:27:22",
-      "link": "https://www.investing.com/news/forex-news/south-african-rand-strengthens-despite-business-conditions-drop-93CH-4875753"
+      "title": "U.S. Treasury yields rise, 2-yr soars as Sept hike back in play after Warsh speech",
+      "published": "2026-08-28 21:17:57",
+      "link": "https://www.investing.com/news/stock-market-news/german-10year-yield-touches-highest-level-since-2011-on-inflation-threats-4880683"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "RBI buys net $561 million in forex market in June",
-      "published": "2026-08-25 14:27:15",
-      "link": "https://www.investing.com/news/forex-news/rbi-buys-net-561-million-in-forex-market-in-june-93CH-4875621"
+      "title": "Canadian dollar slips as trade tensions, Fed outlook keep loonie under pressure",
+      "published": "2026-08-28 20:44:08",
+      "link": "https://www.investing.com/news/forex-news/canadian-dollar-slips-as-trade-tensions-fed-outlook-keep-loonie-under-pressure-4881822"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Global yields stabilize following U.S. sanctions threat and potential cash plan",
-      "published": "2026-08-25 12:06:06",
-      "link": "https://www.investing.com/news/forex-news/global-yields-stabilize-on-toothless-sanctions-threat-and-potential-cash-plan-4874562"
+      "title": "Dollar firms on hawkish Warsh at Jackson Hole, heads for weekly gain of nearly 1%",
+      "published": "2026-08-28 19:42:07",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-dollar-muted-ahead-of-warsh-speech-won-hits-13mth-high-post-bok-hike-4880492"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Can Warsh stop the dollar selling at Jackson Hole?",
-      "published": "2026-08-25 11:34:23",
-      "link": "https://www.investing.com/news/forex-news/can-warsh-stop-the-dollar-selling-at-jackson-hole-4875137"
+      "title": "India’s forex reserves reach record $729.33 billion",
+      "published": "2026-08-28 11:42:06",
+      "link": "https://www.investing.com/news/forex-news/indias-forex-reserves-reach-record-72933-billion-93CH-4881067"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Sterling today: Pound flat as firmer U.S. Treasuries support dollar",
-      "published": "2026-08-25 10:58:54",
-      "link": "https://www.investing.com/news/forex-news/sterling-today-pound-flat-as-firmer-us-treasuries-support-dollar-4874989"
+      "title": "Aussie dollar set for strong week as hot inflation boosts RBA hike bets",
+      "published": "2026-08-28 06:01:58",
+      "link": "https://www.investing.com/news/forex-news/aussie-dollar-set-for-strong-week-as-hot-inflation-boosts-rba-hike-bets-4880527"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Japan debt-servicing cost to rise 17% to record in next fiscal year, Kyodo reports",
-      "published": "2026-08-25 07:54:31",
-      "link": "https://www.investing.com/news/forex-news/japan-debtservicing-cost-to-rise-17-to-record-in-next-fiscal-year-kyodo-reports-4874592"
+      "title": "Dollar flat as traders await Fed chair Warsh’s Jackson Hole speech for rate cues",
+      "published": "2026-08-27 19:09:56",
+      "link": "https://www.investing.com/news/forex-news/asia-fx-mixed-dollar-holds-gains-ahead-of-jackson-hole-won-rises-on-bok-hike-4878318"
     },
     {
       "source": "Investing.com - Forex News",
-      "title": "Stablecoin card spending forecast to hit $50 billion a year by 2028 - RedotPay",
-      "published": "2026-08-25 07:12:28",
-      "link": "https://www.investing.com/news/forex-news/stablecoin-card-spending-forecast-to-hit-50-billion-a-year-by-2028--redotpay-4874550"
+      "title": "Canadian dollar falls as traders weigh Fed outlook and U.S. dollar strength",
+      "published": "2026-08-27 13:58:09",
+      "link": "https://www.investing.com/news/forex-news/canadian-dollar-falls-as-traders-weigh-fed-outlook-and-us-dollar-strength-4879654"
     },
     {
       "source": "FXStreet - News",
-      "title": "Australian Dollar strengthens after hot CPI report; eyes multi-month high ahead of US PCE",
-      "published": "Wed, 26 Aug 2026 01:47:29 GMT",
-      "link": "https://www.fxstreet.com/news/australian-dollar-strengthens-after-hot-cpi-report-eyes-multi-month-high-ahead-of-us-pce-202608260147"
+      "title": "South Korean Won: BoK tightening supports KRW against US Dollar – Commerzbank",
+      "published": "Fri, 28 Aug 2026 23:41:00 GMT",
+      "link": "https://www.fxstreet.com/news/south-korean-won-bok-tightening-supports-krw-against-us-dollar-commerzbank-202608282341"
     },
     {
       "source": "FXStreet - News",
-      "title": "Breaking: Australia’s CPI inflation falls to 3.5% YoY in July vs. 3.2% forecast",
-      "published": "Tue, 25 Aug 2026 22:30:00 GMT",
-      "link": "https://www.fxstreet.com/news/australia-cpi-expected-to-show-inflation-easing-in-july-202608252230"
+      "title": "Vietnam: Exports and consumption stay robust – DBS",
+      "published": "Fri, 28 Aug 2026 23:07:00 GMT",
+      "link": "https://www.fxstreet.com/news/vietnam-exports-and-consumption-stay-robust-dbs-202608282307"
     },
     {
       "source": "FXStreet - News",
-      "title": "WTI drops amid Middle East diplomacy, eased US sanction fears",
-      "published": "Wed, 26 Aug 2026 01:35:41 GMT",
-      "link": "https://www.fxstreet.com/news/wti-drops-amid-middle-east-diplomacy-eased-us-sanction-fears-202608260135"
+      "title": "South Korean Won: BoK front-loading hikes as KRW consolidates – Commerzbank",
+      "published": "Fri, 28 Aug 2026 22:33:00 GMT",
+      "link": "https://www.fxstreet.com/news/south-korean-won-bok-front-loading-hikes-as-krw-consolidates-commerzbank-202608282233"
     },
     {
       "source": "FXStreet - News",
-      "title": "Canadian Dollar weakens amid falling oil prices as USD holds steady ahead of US PCE",
-      "published": "Wed, 26 Aug 2026 01:20:15 GMT",
-      "link": "https://www.fxstreet.com/news/canadian-dollar-weakens-amid-falling-oil-prices-as-usd-holds-steady-ahead-of-us-pce-202608260120"
+      "title": "Philippine Peso: BSP tightening bias on inflation risks – DBS",
+      "published": "Fri, 28 Aug 2026 21:56:00 GMT",
+      "link": "https://www.fxstreet.com/news/philippine-peso-bsp-tightening-bias-on-inflation-risks-dbs-202608282156"
     },
     {
       "source": "FXStreet - News",
-      "title": "PBOC sets USD/CNY reference rate at 6.7829 vs. 6.7852 previous",
-      "published": "Wed, 26 Aug 2026 01:15:24 GMT",
-      "link": "https://www.fxstreet.com/news/pboc-sets-usd-cny-reference-rate-at-67829-vs-67852-previous-202608260115"
+      "title": "South Korean Won: Higher rates and chip boom support gains – ING",
+      "published": "Fri, 28 Aug 2026 21:18:00 GMT",
+      "link": "https://www.fxstreet.com/news/south-korean-won-higher-rates-and-chip-boom-support-gains-ing-202608282118"
     },
     {
       "source": "FXStreet - News",
-      "title": "Euro steadies above 1.1650 ahead of US PCE data",
-      "published": "Wed, 26 Aug 2026 01:03:06 GMT",
-      "link": "https://www.fxstreet.com/news/euro-steadies-above-11650-ahead-of-us-pce-data-202608260103"
+      "title": "Malaysian Ringgit: BNM seen on steady policy path – DBS",
+      "published": "Fri, 28 Aug 2026 20:39:00 GMT",
+      "link": "https://www.fxstreet.com/news/malaysian-ringgit-bnm-seen-on-steady-policy-path-dbs-202608282039"
     },
     {
       "source": "FXStreet - News",
-      "title": "Canada announces 'dollar-for-dollar' retaliatory tariffs up to 50% against US",
-      "published": "Wed, 26 Aug 2026 00:42:28 GMT",
-      "link": "https://www.fxstreet.com/news/canada-announces-dollar-for-dollar-retaliatory-tariffs-up-to-50-against-us-202608260042"
+      "title": "Mexican Peso tumbles as Warsh embarks on inflation fight",
+      "published": "Fri, 28 Aug 2026 20:24:56 GMT",
+      "link": "https://www.fxstreet.com/news/mexican-peso-tumbles-as-warsh-embarks-on-inflation-fight-202608282024"
     },
     {
       "source": "FXStreet - News",
-      "title": "Iran and Oman push talks for ‘interim’ reopening of Hormuz — Bloomberg",
-      "published": "Tue, 25 Aug 2026 23:43:09 GMT",
-      "link": "https://www.fxstreet.com/news/iran-and-oman-push-talks-for-interim-reopening-of-hormuz-202608252343"
+      "title": "Chinese Yuan: Undervaluation and export gains questioned – Commerzbank",
+      "published": "Fri, 28 Aug 2026 20:01:00 GMT",
+      "link": "https://www.fxstreet.com/news/chinese-yuan-undervaluation-and-export-gains-questioned-commerzbank-202608282001"
     }
   ],
   "news_errors": []

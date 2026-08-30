@@ -36,6 +36,20 @@ from agent4_line_notifier import send_broadcast
 
 MAX_HOLD_HOURS = 24
 
+# Yahoo serves 5m bars for the last 60 days, so the window below is a choice
+# about how much to ask for, not a hard limit. "2d" was too little: this job
+# does not run at weekends (the cron is Mon-Fri plus the Sunday Asia open), so
+# a trade opened late on Friday came back on Monday to a window that no longer
+# reached the bars it had missed. The trade would then time out at whatever
+# price happened to be current, recording an R-multiple that had nothing to do
+# with the SL it had actually traded through.
+MIN_FETCH_DAYS = 2
+MAX_FETCH_DAYS = 30
+# A trade opens between bars, so the first bar available after `last_checked`
+# is normally a few minutes later and that is not a gap. One watcher cycle of
+# slack keeps the warning meaning "bars are actually missing".
+COVERAGE_GAP_TOLERANCE_MINUTES = 15
+
 
 def load_json(path):
     try:
@@ -50,12 +64,30 @@ def append_trade_log(record: dict, path: str):
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
-def fetch_recent_bars(symbol: str):
-    """Fetch fine-grained (5m) bars covering the last 2 days, so a watcher
-    run every ~15-30 min can catch intrabar wicks between runs instead of
-    only seeing hourly closes."""
+def fetch_window_days(last_checked, now=None):
+    """How much 5m history to pull, given how long this trade went unwatched.
+
+    Always at least MIN_FETCH_DAYS, and enough to cover the gap since the last
+    check plus a day of margin. A weekend, a failed run or a paused schedule
+    all produce the same gap, and all of them used to silently fall outside a
+    fixed 2-day window.
+    """
+    now = now or pd.Timestamp.now(tz="UTC")
+    if last_checked is None:
+        return MIN_FETCH_DAYS
+    gap_days = (now - last_checked).total_seconds() / 86400.0
+    return int(max(MIN_FETCH_DAYS, min(MAX_FETCH_DAYS, gap_days + 1)))
+
+
+def fetch_recent_bars(symbol: str, last_checked=None):
+    """Fine-grained (5m) bars covering everything since `last_checked`.
+
+    5m rather than hourly so a watcher running every ~15 min catches the
+    intrabar wicks that hit a stop between runs instead of only seeing closes.
+    """
+    period = f"{fetch_window_days(last_checked)}d"
     ticker = yf.Ticker(symbol)
-    df = ticker.history(period="2d", interval="5m", auto_adjust=True)
+    df = ticker.history(period=period, interval="5m", auto_adjust=True)
     if df is None or df.empty:
         return None
     if isinstance(df.columns, pd.MultiIndex):
@@ -88,10 +120,24 @@ def watch(open_trade: dict, token: str, dry_run: bool, trades_log_path: str):
         print(f"[error] unknown pair '{pair}', cannot fetch price", file=sys.stderr)
         return open_trade
 
-    df = fetch_recent_bars(symbol)
+    last_checked = pd.Timestamp(open_trade.get("last_checked_at", open_trade["opened_at"]))
+    if last_checked.tzinfo is None:
+        last_checked = last_checked.tz_localize("UTC")
+
+    df = fetch_recent_bars(symbol, last_checked=last_checked)
     if df is None or df.empty:
         print(f"[warn] no price data for {pair} ({symbol}) right now, skipping this run", file=sys.stderr)
         return open_trade
+
+    # If the feed still does not reach back to the last check, the bars that
+    # decided this trade are gone and any outcome derived from what remains is
+    # a guess. Say so on the record rather than logging a confident number.
+    missing_minutes = (df.index.min() - last_checked).total_seconds() / 60
+    if missing_minutes > COVERAGE_GAP_TOLERANCE_MINUTES:
+        missing_hours = missing_minutes / 60
+        print(f"[warn] {pair}: price history starts {missing_hours:.1f}h after the last check — "
+              f"bars in that gap were never seen", file=sys.stderr)
+        open_trade["coverage_gap_hours"] = round(missing_hours, 2)
 
     entry = open_trade["entry_price"]
     tp1, tp2, tp3 = open_trade["take_profit_1"], open_trade["take_profit_2"], open_trade["take_profit_3"]
@@ -100,9 +146,6 @@ def watch(open_trade: dict, token: str, dry_run: bool, trades_log_path: str):
     alerts = open_trade["alerts_sent"]
     risk = abs(entry - sl0)
 
-    last_checked = pd.Timestamp(open_trade.get("last_checked_at", open_trade["opened_at"]))
-    if last_checked.tzinfo is None:
-        last_checked = last_checked.tz_localize("UTC")
     new_bars = df[df.index > last_checked]
 
     def close_trade(outcome, exit_price):
@@ -124,6 +167,10 @@ def watch(open_trade: dict, token: str, dry_run: bool, trades_log_path: str):
             # skipped by the component report rather than corrupting it.
             "score": open_trade.get("score"),
             "components": open_trade.get("components") or {},
+            # Non-null means some of this trade's price history was never
+            # seen, so validate.py's reader can tell a measured outcome from
+            # a reconstructed one instead of averaging them together.
+            "coverage_gap_hours": open_trade.get("coverage_gap_hours"),
         }, trades_log_path)
         notify(token,
                f"{'🟢' if r_multiple > 0 else '🔴' if r_multiple < 0 else '⚪'} {pair} {action} closed - "

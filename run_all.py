@@ -23,13 +23,23 @@ STEPS = [
     # --allow-unproven-edge: publish even though the backtest measures no edge.
     #
     # This is switched on deliberately, and it is not a fix. As of the current
-    # score_calibration.json the measured expectancy is -0.0357R with a 95%
-    # interval of [-0.0842, +0.0128] over 1,312 trades - the interval contains
+    # score_calibration.json the measured expectancy is +0.0043R with a 95%
+    # interval of [-0.0624, +0.0711] over 1,535 trades - the interval contains
     # zero, so QC's rule 2 would otherwise force every signal to Wait, and it
     # would be right to. The flag overrides that in order to accumulate FORWARD
     # samples, which is the only kind this project does not already have: every
     # number above was measured on the same historical bars the rule was built
     # against.
+    #
+    # Those numbers are from the re-measurement after the trade geometry was
+    # replaced, and they are not comparable to the -0.0357R this comment used
+    # to quote. That figure described a strategy whose levels came, on 98.6% of
+    # trades, from a fixed-percentage fallback nobody knew was firing, and whose
+    # hold window was 4 bars rather than 24 because the backtest drove cadence
+    # and hold off one argument. See scoring.py's TRADE GEOMETRY section. The
+    # conclusion is unchanged, which is worth saying plainly: fixing the
+    # geometry made the system coherent, not profitable. Max favorable and max
+    # adverse excursion are the same distribution at every distance measured.
     #
     # Every card goes out stamped "UNPROVEN EDGE" so nobody downstream mistakes
     # these for validated signals. Size positions accordingly, or paper-trade.
